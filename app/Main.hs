@@ -65,7 +65,7 @@ main =
         GHC.liftIO $ putStrLn $ concatMap showRichToken rts
 
 
-tokenLocs toks = map (\(GHC.L l _, s) -> (l,s)) toks
+tokenLocs = map (\(GHC.L l _, s) -> (l,s))
 
 showRichToken :: (GHC.Located GHC.Token, String) -> String
 showRichToken (loc_tok, s) =

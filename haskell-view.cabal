@@ -29,6 +29,7 @@ executable haskell-view-exe
                      , ghc-paths
                      , ghc-syb-utils
                      , HaRe
+                     , lucid
   default-language:    Haskell2010
 
 test-suite haskell-view-test

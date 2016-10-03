@@ -21,8 +21,8 @@ import GHC.Paths ( libdir )
 import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 
 
-moduleName = "TestMod"
-targetFile = "./test/testdata/TestMod.hs"
+moduleName = "LucidDemo"
+targetFile = "./test/testdata/LucidDemo.hs"
 
 main :: IO ()
 main =
@@ -31,7 +31,7 @@ main =
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
         dflags <- GHC.getSessionDynFlags
         let dflags' = dflags -- foldl GHC.xopt_set dflags [GHC.Opt_Cpp, GHC.Opt_ImplicitPrelude, GHC.Opt_MagicHash]
-            dflags'' = dflags' { GHC.importPaths = ["./test/testdata/","../test/testdata/"] }
+            dflags'' = dflags' { GHC.importPaths = ["./test/testdata/"] }
             dflags''' = dflags'' { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
 
         GHC.setSessionDynFlags dflags'''
@@ -39,16 +39,13 @@ main =
         target <- GHC.guessTarget targetFile Nothing
         GHC.setTargets [target]
         GHC.load GHC.LoadAllTargets -- Loads and compiles, much as calling make
-        GHC.liftIO $ putStrLn "targets loaded"
-        modSum <- GHC.getModSummary $ GHC.mkModuleName moduleName
-        GHC.liftIO $ putStrLn "got modsummary"
+        GHC.liftIO (putStrLn "targets loaded")
 
+        modSum <- GHC.getModSummary $ GHC.mkModuleName moduleName
         p <- GHC.parseModule modSum
-        GHC.liftIO $ putStrLn "parsed"
 
         let ps  = GHC.pm_parsed_source p
-        GHC.liftIO $ putStrLn "got parsed source"
-        GHC.liftIO (putStrLn $ SYB.showData SYB.Parser 0 ps)
+        GHC.liftIO (putStrLn $ "ParsedSource\n\n" ++ SYB.showData SYB.Parser 0 ps)
 
         -- Tokens ------------------------------------------------------
 
@@ -61,8 +58,11 @@ main =
         -- GHC.liftIO $ putStrLn $ "addSourceToTokens=" ++ concatMap showRichToken tokens_and_source
         --
 
-        GHC.liftIO (putStrLn $ "showRichTokenStream=" ++ GHC.showRichTokenStream rts)
-        GHC.liftIO $ putStrLn $ concatMap showRichToken rts
+        -- GHC.liftIO (putStrLn $ concatMap showRichToken rts)
+
+        -- send this to Elm
+        GHC.liftIO (putStrLn $ "showRichTokenStream\n\n" ++ GHC.showRichTokenStream rts)
+        GHC.liftIO (putStrLn $ "<EOF>\n" ++ concatMap (("\n" ++).(++ "\n").showToken) rts)
 
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
@@ -76,8 +76,8 @@ showRichToken (loc_tok, s) =
       srcloc = show $ GHC.getLoc loc_tok
       tok = show $ GHC.unLoc loc_tok
 
-showToken :: GHC.GenLocated GHC.SrcSpan GHC.Token -> String
-showToken t = srcloc ++ " TOKEN= " ++ tok where
+showToken :: (GHC.Located GHC.Token, String) -> String
+showToken (t, s) = tok ++ "\n" ++ srcloc where
   srcloc = show $ GHC.getLoc t
   tok = show $ GHC.unLoc t
 

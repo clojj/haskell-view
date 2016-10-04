@@ -1,4 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
+
+import Network.Wai
+import Network.HTTP.Types (status200)
+import Network.Wai.Handler.Warp (run)
+import Data.ByteString.Lazy.Char8 (pack)
 
 import Lib
 
@@ -24,26 +31,43 @@ import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 moduleName = "LucidDemo"
 targetFile = "./test/testdata/LucidDemo.hs"
 
+app :: Application
+app _ respond = do
+    putStrLn "I've done some IO here"
+    tokens <- ghcMain
+    respond $ responseLBS
+        status200
+        [("Content-Type", "text/plain")]
+        (pack tokens)
+
 main :: IO ()
-main =
-    -- GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $ do
+main = do
+    putStrLn "http://localhost:8080/"
+    run 8080 app
+
+ghcMain :: IO String
+ghcMain =
+    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $ do
 
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
         dflags <- GHC.getSessionDynFlags
         let dflags' = dflags -- foldl GHC.xopt_set dflags [GHC.Opt_Cpp, GHC.Opt_ImplicitPrelude, GHC.Opt_MagicHash]
             dflags'' = dflags' { GHC.importPaths = ["./test/testdata/"] }
-            dflags''' = dflags'' { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
+            dflags''' = dflags'' { GHC.hscTarget = GHC.HscNothing }
+            -- dflags''' = dflags'' { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
 
         GHC.setSessionDynFlags dflags'''
 
         target <- GHC.guessTarget targetFile Nothing
         GHC.setTargets [target]
-        GHC.load GHC.LoadAllTargets -- Loads and compiles, much as calling make
-        GHC.liftIO (putStrLn "targets loaded")
+        let modName = GHC.mkModuleName moduleName
+        GHC.load $ GHC.LoadUpTo modName
+        -- GHC.load GHC.LoadAllTargets -- Loads and compiles, much as calling make
+        -- GHC.liftIO (putStrLn "targets loaded")
 
-        modSum <- GHC.getModSummary $ GHC.mkModuleName moduleName
+        modSum <- GHC.getModSummary modName
+
         p <- GHC.parseModule modSum
-
         let ps  = GHC.pm_parsed_source p
         GHC.liftIO (putStrLn $ "ParsedSource\n\n" ++ SYB.showData SYB.Parser 0 ps)
 
@@ -62,7 +86,10 @@ main =
 
         -- send this to Elm
         GHC.liftIO (putStrLn $ "showRichTokenStream\n\n" ++ GHC.showRichTokenStream rts)
-        GHC.liftIO (putStrLn $ "<EOF>\n" ++ concatMap (("\n" ++).(++ "\n").showToken) rts)
+        let tokens = concatMap (("\n" ++).(++ "\n").showToken) rts
+        GHC.liftIO (putStrLn $ "<EOF>\n" ++ tokens)
+
+        return tokens
 
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))

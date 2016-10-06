@@ -5,7 +5,7 @@ module Main where
 import Network.Wai
 import Network.HTTP.Types (status200)
 import Network.Wai.Handler.Warp (run)
-import Data.ByteString.Lazy.Char8 (pack)
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 import Lib
 
@@ -42,10 +42,13 @@ app :: Application
 app _ respond = do
     putStrLn "RESPOND"
     tokens <- ghcMain
+    let response = BS.pack tokens
+    BS.writeFile "./responses/response.txt" response
+    
     respond $ responseLBS
         status200
         [("Content-Type", "text/plain")]
-        (pack tokens)
+        response
 
 
 -- TODO write to local file

@@ -1,4 +1,3 @@
-* String/ByteString efficiency
 
 * how to Ctrl-C the server-process ?
 
@@ -10,3 +9,16 @@ also: https://github.com/edsko/ghc-dump-tree/blob/a13f2622dff088b1fa95d30886e010
 
 
 * something useful in https://github.com/edsko/ghc-dump-tree ?
+
+
+Optimizations
+=============
+* replace showRichTokenStream by actual source; check for differences !
+
+* cache results of lexing/parsing/usage-links etc. on the server (before sending to the client, write the response in a local file)
+
+* request as "one-source-at-a-time" vs. complete project in one request
+
+* String/ByteString efficiency... use Data.Text ?
+
+* check for spaceleaks (GHC stack-limit technique, see Neil Mitchell, eXchange 2016)

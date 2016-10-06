@@ -31,6 +31,13 @@ import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 moduleName = "LucidDemo"
 targetFile = "./test/testdata/LucidDemo.hs"
 
+
+main :: IO ()
+main = do
+    putStrLn "http://localhost:8080/"
+    run 8080 app
+
+
 app :: Application
 app _ respond = do
     putStrLn "I've done some IO here"
@@ -40,14 +47,11 @@ app _ respond = do
         [("Content-Type", "text/plain")]
         (pack tokens)
 
-main :: IO ()
-main = do
-    putStrLn "http://localhost:8080/"
-    run 8080 app
 
+-- TODO write to local file
 ghcMain :: IO String
 ghcMain =
-    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $ do
+    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
 
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
         dflags <- GHC.getSessionDynFlags
@@ -73,24 +77,30 @@ ghcMain =
 
         -- Tokens ------------------------------------------------------
 
-        -- TODO http://ghc.haskell.org/trac/ghc/ticket/8265
+        -- TODO check if fixed ? http://ghc.haskell.org/trac/ghc/ticket/8265
         -- rts <- GHC.getRichTokenStream (GHC.ms_mod modSum)
         rts <- HaRe.getRichTokenStreamWA (GHC.ms_mod modSum)
 
         -- let tokens_and_source =
         --      GHC.addSourceToTokens (GHC.mkRealSrcLoc (GHC.mkFastString "<file>") 1 1) (GHC.stringToStringBuffer "") ts
         -- GHC.liftIO $ putStrLn $ "addSourceToTokens=" ++ concatMap showRichToken tokens_and_source
-        --
-
         -- GHC.liftIO (putStrLn $ concatMap showRichToken rts)
 
-        -- send this to Elm
-        GHC.liftIO (putStrLn $ "showRichTokenStream\n\n" ++ GHC.showRichTokenStream rts)
-        let tokens = concatMap (("\n" ++).(++ "\n").showToken) rts
-        GHC.liftIO (putStrLn $ "<EOF>\n" ++ tokens)
+        -- TODO sourceId: filename, path, module-name, ...?
+        let sourceId = moduleName
+        let lexedSource = sourceId ++ "\n" ++ GHC.showRichTokenStream rts ++ "<EOF>\n" ++ concatMap (("\n" ++).(++ "\n").showToken) rts
+        GHC.liftIO (putStrLn lexedSource)
 
-        return tokens
+        return lexedSource
 
+
+showToken :: (GHC.Located GHC.Token, String) -> String
+showToken (t, s) = tok ++ "\n" ++ srcloc where
+  srcloc = show $ GHC.getLoc t
+  tok = show $ GHC.unLoc t
+
+
+-- useful helper functions (?)
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
 
@@ -102,9 +112,4 @@ showRichToken (loc_tok, s) =
     where
       srcloc = show $ GHC.getLoc loc_tok
       tok = show $ GHC.unLoc loc_tok
-
-showToken :: (GHC.Located GHC.Token, String) -> String
-showToken (t, s) = tok ++ "\n" ++ srcloc where
-  srcloc = show $ GHC.getLoc t
-  tok = show $ GHC.unLoc t
 

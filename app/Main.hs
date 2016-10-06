@@ -40,7 +40,7 @@ main = do
 
 app :: Application
 app _ respond = do
-    putStrLn "I've done some IO here"
+    putStrLn "RESPOND"
     tokens <- ghcMain
     respond $ responseLBS
         status200
@@ -51,6 +51,7 @@ app _ respond = do
 -- TODO write to local file
 ghcMain :: IO String
 ghcMain =
+    -- TODO send errors/exceptions/messages to client !
     GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
 
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do

@@ -40,11 +40,14 @@ main = do
 
 app :: Application
 app _ respond = do
+
+    -- TODO request / URL(s)
+    -- TODO parse/analyze stack.yaml, cabal-file, dir-tree
     putStrLn "RESPOND"
     tokens <- ghcMain
     let response = BS.pack tokens
     BS.writeFile "./responses/response.txt" response
-    
+
     respond $ responseLBS
         status200
         [("Content-Type", "text/plain")]

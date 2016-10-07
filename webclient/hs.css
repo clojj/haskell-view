@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'firacode';
+  src: url('fonts/FiraCode-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: 'firacode', Fallback, sans-serif;
+}

@@ -4,4 +4,7 @@ responses/
 elm-stuff/
 # elm-repl generated files
 repl-temp-*
+# compiled by elm
 haskell-view.js
+# compiled by elm-css
+hv.css

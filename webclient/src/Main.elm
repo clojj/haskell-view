@@ -1,13 +1,18 @@
 module Main exposing (..)
 
-import Html exposing (..)
+import Html exposing ( Html )
 import Html.App as Html
 
 import String exposing (..)
 
-import Html.Attributes exposing (..)
---import Html.Events exposing (onClick)
+-- import Html.Attributes exposing (..)
+-- import Html.Events exposing (onClick)
 
+import HvCss
+import Html.CssHelpers
+
+
+{ id, class, classList } = Html.CssHelpers.withNamespace "haskell-view"
 
 main : Program Never
 main =
@@ -53,6 +58,8 @@ initialModel =
 init : ( Model, Cmd Msg )
 init = ( initialModel, Cmd.none )
 
+
+
 -- UPDATE
 
 type Msg
@@ -64,21 +71,25 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+
+
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
+
+
 -- VIEW
 
 view : Model -> Html Msg
 view { json, doc } =
-    div [] (List.map viewLine (split "\n" doc))
+    Html.div [] (List.map viewLine (split "\n" doc))
 
 viewLine : String -> Html Msg
 viewLine line =
-    div [] [ text line, br [] []]
+    Html.div [ class [HvCss.ITlineComment]] [ Html.text line, Html.br [] []]
 
 showName : HsType -> String
 showName hsType = "name: " ++ hsType.name

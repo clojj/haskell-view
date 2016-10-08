@@ -2,7 +2,9 @@ module Main exposing (..)
 
 import Html exposing ( Html )
 import Html.App as Html
-
+import Http
+import Task exposing (..)
+import Debug
 import String exposing (..)
 
 -- import Html.Attributes exposing (..)
@@ -56,20 +58,40 @@ initialModel =
 
 
 init : ( Model, Cmd Msg )
-init = ( initialModel, Cmd.none )
-
+init = ( initialModel, getHaskell "TestMod" )
 
 
 -- UPDATE
 
 type Msg
-    = NoOp
+  = NoOp
+  | GetHaskell
+  | FetchSucceed String
+  | FetchFail Http.Error
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        GetHaskell ->
+          (model, getHaskell "TODO")
+
+        FetchSucceed data ->
+          (Model model.json (Debug.log "response: " data), Cmd.none)
+
+        FetchFail _ ->
+          (model, Cmd.none)
+
+
+-- HTTP
+
+getHaskell : String -> Cmd Msg
+getHaskell path =
+  let url = "http://localhost:8080/docroot/" ++ path
+  in
+    Task.perform FetchFail FetchSucceed <| Http.getString url
 
 
 

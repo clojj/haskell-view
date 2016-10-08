@@ -28,14 +28,15 @@ import GHC.Paths ( libdir )
 import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 
 
-moduleName = "LucidDemo"
-targetFile = "./test/testdata/LucidDemo.hs"
+moduleName = "TestMod"
+targetFile = "./test/testdata/TestMod.hs"
 
+port = 8081
 
 main :: IO ()
 main = do
-    putStrLn "http://localhost:8080/"
-    run 8080 app
+    putStrLn $ "http://localhost:" ++ show port
+    run port app
 
 
 app :: Application
@@ -46,7 +47,7 @@ app _ respond = do
     putStrLn "RESPOND"
     tokens <- ghcMain
     let response = BS.pack tokens
-    BS.writeFile "./responses/response.txt" response
+    BS.writeFile ("./webclient/docroot/" ++ moduleName) response
 
     respond $ responseLBS
         status200

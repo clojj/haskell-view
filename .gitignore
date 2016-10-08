@@ -1,5 +1,6 @@
 .stack-work/
 responses/
+
 # elm-package generated files
 elm-stuff/
 # elm-repl generated files
@@ -8,3 +9,6 @@ repl-temp-*
 haskell-view.js
 # compiled by elm-css
 hv.css
+
+# GHC pre-processed documents
+docroot/

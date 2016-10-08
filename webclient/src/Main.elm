@@ -58,7 +58,7 @@ initialModel =
 
 
 init : ( Model, Cmd Msg )
-init = ( initialModel, getHaskell "TestMod" )
+init = ( initialModel, getHaskell "testMod" )
 
 
 -- UPDATE
@@ -89,7 +89,7 @@ update msg model =
 
 getHaskell : String -> Cmd Msg
 getHaskell path =
-  let url = "http://localhost:8080/docroot/" ++ path
+  let url = "http://localhost:8081/" ++ path
   in
     Task.perform FetchFail FetchSucceed <| Http.getString url
 

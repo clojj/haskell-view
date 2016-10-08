@@ -1,6 +1,4 @@
 
-* how to Ctrl-C the server-process ?
-
 * parse project structure (stack.yaml, cabal)
 
 * Error handling: transport error-messages to client (only in stdout at the moment)

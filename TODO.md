@@ -1,17 +1,20 @@
 
-* parse project structure (stack.yaml, cabal)
+* WIP parse project structure (stack.yaml, cabal)
+  see https://github.com/haskell-tools/haskell-tools/blob/51c41a4727bc317c762e4e9ddc589f4d9f35bf9d/src/cli/Language/Haskell/Tools/Refactor/CLI.hs#L45
+  Main.hs missing
 
 * Error handling: transport error-messages to client (only in stdout at the moment)
 
 * typecheck module
-see: haskell-tools
-also: https://github.com/edsko/ghc-dump-tree/blob/a13f2622dff088b1fa95d30886e010280f63edeb/src/Language/Haskell/GHC/DumpTree.hs#L294
+  see: haskell-tools
+  see also: https://github.com/edsko/ghc-dump-tree/blob/a13f2622dff088b1fa95d30886e010280f63edeb/src/Language/Haskell/GHC/DumpTree.hs#L294
 
-* something useful in https://github.com/edsko/ghc-dump-tree ?
+* generally: ? anything useful in https://github.com/edsko/ghc-dump-tree
 
 
 Optimizations
 =============
+
 * replace showRichTokenStream by actual source; check for differences !
 
 * WIP before sending to the client, write the results to local file
@@ -21,5 +24,7 @@ Optimizations
 * request as "one-source-at-a-time" vs. complete project in one request
 
 * String/ByteString efficiency... use Data.Text ?
+
+* Protolude et al. ?
 
 * check for spaceleaks (GHC stack-limit technique, see Neil Mitchell, eXchange 2016)

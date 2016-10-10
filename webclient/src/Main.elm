@@ -52,7 +52,7 @@ initialModel =
 
 
 init : ( Model, Cmd Msg )
-init = ( initialModel, getHaskell "FSNotify" )
+init = ( initialModel, getHaskell "Lib" )
 
 
 -- UPDATE

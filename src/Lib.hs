@@ -35,7 +35,7 @@ ghcMain =
 
         GHC.setSessionDynFlags dflags''
 
-        moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/testdata/"]
+        moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/stack-project/"]
         useDirs (concatMap fst moduleNames)
         GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
         GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."

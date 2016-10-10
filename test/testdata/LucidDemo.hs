@@ -4,7 +4,7 @@
 module LucidDemo where
 
 import Control.Monad
-mport Lucid
+import Lucid
 
 -- demo :: Html ()
 -- demo =

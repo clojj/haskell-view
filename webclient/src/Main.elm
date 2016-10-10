@@ -32,33 +32,27 @@ type alias Location =
   , col : Int
   }
 
-type alias HsType =
+type alias Token =
   { name : String
   , from : Location
   , to : Location
   }
 
 type alias Model =
-    { json : List HsType
-    , doc : String
+    { tokens : String
+    , src : String
     }
 
 
 initialModel : Model
 initialModel =
-  { json =
-    [
-      { name = "a"
-      , from = {line = 0, col = 2}
-      , to = {line = 0, col = 3}
-      }
-    ]
-  , doc = "  a <- x\nsecond line"
+  { tokens = ""
+  , src = ""
   }
 
 
 init : ( Model, Cmd Msg )
-init = ( initialModel, getHaskell "testMod" )
+init = ( initialModel, getHaskell "FSNotify" )
 
 
 -- UPDATE
@@ -79,7 +73,7 @@ update msg model =
           (model, getHaskell "TODO")
 
         FetchSucceed data ->
-          (Model model.json (Debug.log "response: " data), Cmd.none)
+          (Model model.tokens (Debug.log "response: " data), Cmd.none)
 
         FetchFail _ ->
           (model, Cmd.none)
@@ -89,7 +83,7 @@ update msg model =
 
 getHaskell : String -> Cmd Msg
 getHaskell path =
-  let url = "http://localhost:8081/" ++ path
+  let url = "http://localhost:8081/source/" ++ path
   in
     Task.perform FetchFail FetchSucceed <| Http.getString url
 
@@ -106,12 +100,10 @@ subscriptions model =
 -- VIEW
 
 view : Model -> Html Msg
-view { json, doc } =
-    Html.div [] (List.map viewLine (split "\n" doc))
+view { tokens, src } =
+    Html.div [] (List.map viewLine (split "\n" src))
 
 viewLine : String -> Html Msg
 viewLine line =
     Html.div [ class [HvCss.ITlineComment]] [ Html.text line, Html.br [] []]
 
-showName : HsType -> String
-showName hsType = "name: " ++ hsType.name

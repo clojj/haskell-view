@@ -77,6 +77,7 @@ update msg model =
            let
             newModel = (Model model.tokens (Debug.log "response: " data))
            in
+            -- TODO elm-update-extra or elm-return or Task.perform ?
             update ProcessHaskell newModel
 
         FetchFail _ ->

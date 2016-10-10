@@ -60,6 +60,7 @@ init = ( initialModel, getHaskell "Lib" )
 type Msg
   = NoOp
   | GetHaskell
+  | ProcessHaskell
   | FetchSucceed String
   | FetchFail Http.Error
 
@@ -73,11 +74,16 @@ update msg model =
           (model, getHaskell "TODO")
 
         FetchSucceed data ->
-          (Model model.tokens (Debug.log "response: " data), Cmd.none)
+           let
+            newModel = (Model model.tokens (Debug.log "response: " data))
+           in
+            update ProcessHaskell newModel
 
         FetchFail _ ->
           (model, Cmd.none)
 
+        ProcessHaskell ->
+          (Model model.tokens (Debug.log "process: " model.src), Cmd.none)
 
 -- HTTP
 

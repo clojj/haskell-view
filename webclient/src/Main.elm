@@ -39,15 +39,17 @@ type alias Token =
   }
 
 type alias Model =
-    { tokens : String
-    , src : String
+    { src : String
+    , html : Html Msg
+    , tokens : String
     }
 
 
 initialModel : Model
 initialModel =
-  { tokens = ""
-  , src = ""
+  { src = ""
+  , html = Html.text ""
+  , tokens = ""
   }
 
 
@@ -58,33 +60,29 @@ init = ( initialModel, getHaskell "Lib" )
 -- UPDATE
 
 type Msg
-  = NoOp
-  | GetHaskell
-  | ProcessHaskell
+  = GetHaskell
   | FetchSucceed String
   | FetchFail Http.Error
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
 
         GetHaskell ->
           (model, getHaskell "TODO")
 
         FetchSucceed data ->
-           let
-            newModel = (Model model.tokens (Debug.log "response: " data))
-           in
-            -- TODO elm-update-extra or elm-return or Task.perform ?
-            update ProcessHaskell newModel
+           case (split "<EOF>" data) of
+            [] -> (Model "err" (Html.text "err") "", Cmd.none)
+            src :: tokens ->
+              let t = case (List.head tokens) of
+                        Just ts -> ts
+                        Nothing -> "no tokens"
+                  html = createView src t
+                  in ((Model model.src (Debug.log "HTML\n" html) model.tokens), Cmd.none)
 
         FetchFail _ ->
           (model, Cmd.none)
-
-        ProcessHaskell ->
-          (Model model.tokens (Debug.log "process: " model.src), Cmd.none)
 
 -- HTTP
 
@@ -107,8 +105,14 @@ subscriptions model =
 -- VIEW
 
 view : Model -> Html Msg
-view { tokens, src } =
-    Html.div [] (List.map viewLine (split "\n" src))
+view { src, html, tokens } = html
+
+createView : String -> String -> Html Msg
+createView src tokens =
+    Html.div [] [
+      Html.div [] (List.map viewLine (split "\n" src)),
+      Html.div [] [Html.text ("TOKENS: " ++ tokens)]
+    ]
 
 viewLine : String -> Html Msg
 viewLine line =

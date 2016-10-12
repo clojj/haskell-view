@@ -17,7 +17,7 @@ import System.Directory
 import Lib
 
 type IOAPI =
-  "source" :> Capture "modulename" String :> Get '[PlainText] String :<|> -- TODO parameterize
+  "source" :> Capture "modulename" String :> Get '[PlainText] String :<|>
   "view" :> Raw
 
 ioAPI :: Proxy IOAPI
@@ -28,10 +28,8 @@ server = getFile :<|> serveDirectory "webclient"
 
 type MyHandler = ExceptT ServantErr IO
 
--- TODO parameterize
 getFile :: String -> MyHandler String
-getFile modulename = do
-  liftIO (readFile $ "webclient/docroot/" ++ modulename)
+getFile modulename = liftIO (readFile $ "webclient/docroot/" ++ modulename)
 
 app :: Application
 app = serve ioAPI server

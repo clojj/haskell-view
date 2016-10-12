@@ -58,23 +58,22 @@ init =
     ( initialModel, getHaskell "Lib" )
 
 
-
 -- UPDATE
 
-
 type Msg
-    = GetHaskell
-    | GetHaskellSucceed String
-    | FetchFail Http.Error
+    = GetSource String
+    | GetSourceSucceed String
+    | GetSourceFail Http.Error
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GetHaskell ->
-            ( model, getHaskell "TODO" )
+        GetSource name ->
+            ( model, getHaskell name )
 
-        GetHaskellSucceed data ->
+        GetSourceSucceed data ->
+            -- TODO replace by folding over interleaved tokens/source
             case (split "<EOF>" data) of
                 [] ->
                     ( Model (Html.text "error"), Cmd.none )
@@ -94,7 +93,7 @@ update msg model =
                     in
                         ( (Model (Debug.log "HTML\n" html)), Cmd.none )
 
-        FetchFail _ ->
+        GetSourceFail _ ->
             ( model, Cmd.none )
 
 
@@ -108,7 +107,7 @@ getHaskell path =
         url =
             "http://localhost:8081/source/" ++ path
     in
-        Task.perform FetchFail GetHaskellSucceed <| Http.getString url
+        Task.perform GetSourceFail GetSourceSucceed <| Http.getString url
 
 
 

@@ -1,4 +1,16 @@
 
+Client
+======
+
+* fold over interleaved tokens/source to render styled Html
+
+Server
+======
+
+* WIP interleave all tokens
+
+* provide project structure (stack.yaml, cabal) to client (directory-tree)
+
 * WIP parse project structure (stack.yaml, cabal)
   see https://github.com/haskell-tools/haskell-tools/blob/51c41a4727bc317c762e4e9ddc589f4d9f35bf9d/src/cli/Language/Haskell/Tools/Refactor/CLI.hs#L45
   Main.hs missing
@@ -16,8 +28,6 @@ Optimizations
 =============
 
 * replace showRichTokenStream by actual source; check for differences !
-
-* WIP before sending to the client, write the results to local file
 
 * cache results of lexing/parsing/usage-links etc. on the server, last-modified optimization etc.
 

@@ -2,13 +2,16 @@
 responses/
 
 # elm-package generated files
-elm-stuff/
+webclient/elm-stuff/
+
 # elm-repl generated files
-repl-temp-*
+webclient/repl-temp-*
+
 # compiled by elm
-haskell-view.js
+webclient/haskell-view.js
+
 # compiled by elm-css
-hv.css
+webclient/hv.css
 
 # GHC pre-processed documents
 docroot/

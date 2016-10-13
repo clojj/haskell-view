@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lib ( ghcMain ) where
 
 import qualified GHC.SYB.Utils         as SYB
@@ -19,11 +21,11 @@ import GHC.Paths ( libdir )
 import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 
 import GetModules
-import Prelude hiding (readFile, writeFile)
+import Prelude hiding (readFile, writeFile, take, drop)
 import Data.Text.IO (readFile, writeFile)
 import Data.Text hiding (concatMap, map, concat, foldl')
 import Data.List (foldl')
-
+import Data.Monoid
 
 ghcMain :: IO ()
 ghcMain =
@@ -80,26 +82,42 @@ process moduleName = do
           case file of
             Nothing  -> return ()
             Just f -> do
-              contents <- readFile f
+              content <- readFile f
 
-              -- TODO interleave tokens with contents
-              let tokens = foldl' foldToken empty ts
+              -- TODO interleave tokens with content
+              let lines = splitOn "\n" content
+              let tokenizedSource = foldl' (foldToken lines) empty ts
 
-              writeFile ("./webclient/docroot/" ++ moduleName) $ append contents $ append (pack "<EOF>") tokens
+              writeFile ("./webclient/docroot/" ++ moduleName)
+                $ append content
+                $ append "<EOF>" tokenizedSource
 
+-- TODO interleave whitespace and newlines !
+-- TODO Reader Monad for content ?
+foldToken :: [Text] -> Text -> GHC.Located GHC.Token -> Text
+foldToken content result locToken =
+  let (GHC.RealSrcSpan loc) = GHC.getLoc locToken
+      (fromLine, fromCol, toLine, toCol) = (GHC.srcSpanStartLine loc, GHC.srcSpanStartCol loc, GHC.srcSpanEndLine loc, GHC.srcSpanEndCol loc)
+      position = show fromLine ++ " " ++ show fromCol ++ " " ++ show toLine ++ " "++ show toCol ++ " "
+      src   = substr (fromCol - 1) (toCol - fromCol) $ content!!(fromLine - 1)
+  in result <> pack (position ++ tokenAsString (GHC.unLoc locToken) ++ ":") <> src <> "\n"
+
+substr :: Int -> Int -> Text -> Text
+substr from len = take len . drop from
+
+-- TODO map tokens to class-names
 tokenAsString :: GHC.Token -> String
 tokenAsString t = case t of
-  GHC.ITconid s   -> "ITconid"
-  GHC.ITmodule    -> "ITmodule"
-  -- TODO all tokens !
-  _               -> "todo"
+  GHC.ITconid s         -> "ITconid"
+  GHC.ITmodule          -> "ITmodule"
+  GHC.ITblockComment s  -> "ITblockComment"
 
-foldToken :: Text -> GHC.Located GHC.Token -> Text
-foldToken txt locToken =
-  let (GHC.RealSrcSpan loc) = GHC.getLoc locToken
-      pos = (GHC.srcSpanStartLine loc, GHC.srcSpanStartCol loc)
-      t   = GHC.unLoc locToken
-  in append txt (pack $ show pos ++ ":" ++ tokenAsString t ++ ":")
+  GHC.ITocurly          -> "special"
+  GHC.ITccurly          -> "special"
+  GHC.ITvocurly         -> "special"
+  GHC.ITvccurly         -> "special"
+  -- TODO all tokens !
+  _               -> show t
 
 showRichToken :: (GHC.Located GHC.Token, String) -> String
 showRichToken (t, s) = tok ++ "\n" ++ srcloc where

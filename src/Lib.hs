@@ -88,9 +88,7 @@ process moduleName = do
               let lines = splitOn "\n" content
               let tokenizedSource = foldl' (foldToken lines) empty ts
 
-              writeFile ("./webclient/docroot/" ++ moduleName)
-                $ append content
-                $ append "<EOF>" tokenizedSource
+              writeFile ("./webclient/docroot/" ++ moduleName) $ content <> "<EOF>\n" <> tokenizedSource
 
 -- TODO interleave whitespace and newlines !
 -- TODO Reader Monad for content ?

@@ -24,8 +24,10 @@ import GetModules
 import Prelude hiding (readFile, writeFile, take, drop)
 import Data.Text.IO (readFile, writeFile)
 import Data.Text hiding (concatMap, map, concat, foldl')
+import Data.String
 import Data.List (foldl')
 import Data.Monoid
+
 
 ghcMain :: IO ()
 ghcMain =
@@ -98,10 +100,11 @@ foldToken content result locToken =
       (fromLine, fromCol, toLine, toCol) = (GHC.srcSpanStartLine loc, GHC.srcSpanStartCol loc, GHC.srcSpanEndLine loc, GHC.srcSpanEndCol loc)
       position = show fromLine ++ " " ++ show fromCol ++ " " ++ show toLine ++ " "++ show toCol ++ " "
       src   = substr (fromCol - 1) (toCol - fromCol) $ content!!(fromLine - 1)
-  in result <> pack (position ++ tokenAsString (GHC.unLoc locToken) ++ ":") <> src <> "\n"
+  in result <> fromString (position ++ tokenAsString (GHC.unLoc locToken) ++ ":") <> src <> "\n"
 
 substr :: Int -> Int -> Text -> Text
 substr from len = take len . drop from
+
 
 -- TODO map tokens to class-names
 tokenAsString :: GHC.Token -> String
@@ -117,13 +120,14 @@ tokenAsString t = case t of
   -- TODO all tokens !
   _               -> show t
 
+
+
+-- useful helper functions
+
 showRichToken :: (GHC.Located GHC.Token, String) -> String
 showRichToken (t, s) = tok ++ "\n" ++ srcloc where
   srcloc = show $ GHC.getLoc t
   tok = show $ GHC.unLoc t
-
-
--- useful helper functions (?)
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
 

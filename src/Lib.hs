@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib ( ghcMain ) where
+module Lib ( ghcMain, substr, substrText, toOffset ) where
 
 import qualified GHC.SYB.Utils         as SYB
 
@@ -22,11 +22,15 @@ import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 
 import GetModules
 import Prelude hiding (readFile, writeFile, take, drop)
+import qualified Data.Text as T
 import Data.Text.IO (readFile, writeFile)
 import Data.Text hiding (concatMap, map, concat, foldl')
 import Data.String
 import Data.List (foldl')
 import Data.Monoid
+
+import Data.Vector ((!), Vector)
+import qualified Data.ByteString.Char8 as BSC
 
 
 ghcMain :: IO ()
@@ -90,24 +94,20 @@ process moduleName = do
               let lines = splitOn "\n" content
               let tokenizedSource = foldl' (foldToken lines) empty ts
 
-              writeFile ("./webclient/docroot/" ++ moduleName) $ content <> "<EOF>\n" <> tokenizedSource
+              writeFile ("./webclient/docroot/" ++ moduleName) $ content <> "<EOF>\n" <> "[" <> tokenizedSource <> "]"
 
--- TODO interleave whitespace and newlines !
--- TODO Reader Monad for content ?
+-- TODO replace with code from PerformanceTest
 foldToken :: [Text] -> Text -> GHC.Located GHC.Token -> Text
-foldToken content result locToken =
-  let (GHC.RealSrcSpan loc) = GHC.getLoc locToken
-      (fromLine, fromCol, toLine, toCol) = (GHC.srcSpanStartLine loc, GHC.srcSpanStartCol loc, GHC.srcSpanEndLine loc, GHC.srcSpanEndCol loc)
-      position = show fromLine ++ " " ++ show fromCol ++ " " ++ show toLine ++ " "++ show toCol ++ " "
-      src   = substr (fromCol - 1) (toCol - fromCol) $ content!!(fromLine - 1)
-  in result <> fromString (position ++ tokenAsString (GHC.unLoc locToken) ++ ":") <> src <> "\n"
+foldToken lines result locToken =
+  -- let (GHC.RealSrcSpan loc) = GHC.getLoc locToken
+  --     [l1, c1, l2, c2] = fmap (1 -) $ [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
+      -- TODO need the position in client ?
+      -- position = show fromLine ++ " " ++ show fromCol ++ " " ++ show toLine ++ " "++ show toCol ++ " "
 
-substr :: Int -> Int -> Text -> Text
-substr from len = take len . drop from
-
+  result <> "(" <> showRichTokenAsTestData locToken <> ", " <> "\"" <> tokenAsString (GHC.unLoc locToken) <> "\"" <> ")," <> "\n"
 
 -- TODO map tokens to class-names
-tokenAsString :: GHC.Token -> String
+tokenAsString :: GHC.Token -> Text
 tokenAsString t = case t of
   GHC.ITconid s         -> "ITconid"
   GHC.ITmodule          -> "ITmodule"
@@ -118,11 +118,37 @@ tokenAsString t = case t of
   GHC.ITvocurly         -> "special"
   GHC.ITvccurly         -> "special"
   -- TODO all tokens !
-  _               -> show t
+  -- _               -> T.pack $ show t
+  _               -> "todo"
 
+-- helper functions
 
+toOffset :: Vector Int -> (Int, Int) -> Int
+toOffset ls (l, c) =
+  (ls ! (l-1)) + c
 
--- useful helper functions
+substr :: BSC.ByteString -> Vector Int -> (Int, Int) -> Int -> (Int, Int) -> Int -> BSC.ByteString
+substr src ls (l1, c1) o1 (l2, c2) o2 =
+  let
+    off1 = (ls ! (l1-1)) + c1 + o1
+    off2 = (ls ! (l2-1)) + c2 + o2
+    len  = off2 - off1
+  in (BSC.take len . BSC.drop off1) src
+
+substrText :: Text -> Vector Int -> (Int, Int) -> Int -> (Int, Int) -> Int -> Text
+substrText src ls (l1, c1) o1 (l2, c2) o2 =
+  let
+    off1 = (ls ! (l1-1)) + c1 + o1
+    off2 = (ls ! (l2-1)) + c2 + o2
+    len  = off2 - off1
+  in (take len . drop off1) src
+
+showRichTokenAsTestData :: GHC.Located GHC.Token -> Text
+showRichTokenAsTestData t =
+  let (GHC.RealSrcSpan loc) = GHC.getLoc t
+      [l1, c1, l2, c2] = [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
+  in
+    T.pack $ show ((l1, c1), (l2, c2))
 
 showRichToken :: (GHC.Located GHC.Token, String) -> String
 showRichToken (t, s) = tok ++ "\n" ++ srcloc where
@@ -130,4 +156,3 @@ showRichToken (t, s) = tok ++ "\n" ++ srcloc where
   tok = show $ GHC.unLoc t
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
-

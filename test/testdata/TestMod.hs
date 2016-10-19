@@ -11,3 +11,4 @@ someFunc = putStrLn "someFunc"
 multi = "line1\
 \line2\
 \line3"   -- a single line comment
+

@@ -29,7 +29,10 @@ Optimizations
 =============
 
 * WIP use results from Performance*Test in the server
-  TODO: measure space/heap usage in Performance*Test
+
+  WIP measure space/heap usage in MemoryTest
+        stack exec --... +RTS -sstderr
+
   TODO: PerformanceSequenceOfCharTest: elemIndicesL and insertAt
 
 * cache results of lexing/parsing/usage-links etc. on the server, last-modified optimization etc.

@@ -64,6 +64,21 @@ executable performance-test
                      , vector
   default-language:    Haskell2010
 
+executable memory-test
+  hs-source-dirs:      test
+  main-is:             MemoryTest.hs
+  other-modules:       PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest, TestHelpers
+  ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , haskell-view
+                     , directory
+                     , text
+                     , bytestring
+                     , utf8-string
+                     , containers
+                     , vector
+  default-language:    Haskell2010
+
 test-suite haskell-view-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test

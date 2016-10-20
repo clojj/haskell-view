@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Criterion.Main
-
 import qualified Data.List as L
 import qualified Data.Vector as V
 import qualified Data.Text.IO as TIO
@@ -20,6 +18,7 @@ main :: IO ()
 main = do
   contentText <- TIO.readFile "test/testdata/TestMod.hs"
   contentByteString <- C.readFile "test/testdata/TestMod.hs"
+
   -- let ts = [(((1,1), (1,6)), "tok1"), (((2,7), (2,14)), "tok2"), (((13,11), (13,34)), "comment")]
   let ts = [(((1,1),(1,7)), "ITmodule"),
             (((1,8),(1,15)), "ITconid"),
@@ -75,16 +74,12 @@ main = do
   -- print "Text"
   -- let resultText = doText contentText tsText
   -- TIO.putStr resultText
-  -- TIO.writeFile "webclient/docroot/TestMod.out.text" resultText
 
-  -- print "ByteString"
-  -- let result = doByteString contentByteString ts
+  print "ByteString"
+  let result = doByteString contentByteString ts
+  C.putStr result
+
+  -- print "ByteStringUTF8"
+  -- let result = doByteStringUTF8 contentByteString ts
   -- C.putStr result
-  -- C.writeFile "webclient/docroot/TestMod.out.bs" result
 
-  defaultMain [
-    bgroup "insert tokens"
-     [ bench "Text" $ nf (doText contentText) tsText
-     , bench "ByteString" $ nf (doByteString contentByteString) ts
-     , bench "ByteStringUTF8" $ nf (doByteStringUTF8 contentByteString) ts]
-     ]

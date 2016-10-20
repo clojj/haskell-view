@@ -30,7 +30,7 @@ Optimizations
 
 * WIP use results from Performance*Test in the server
   TODO: measure space/heap usage in Performance*Test
-  TODO: PerformanceSequenceOfCharTest
+  TODO: PerformanceSequenceOfCharTest: elemIndicesL and insertAt
 
 * cache results of lexing/parsing/usage-links etc. on the server, last-modified optimization etc.
 

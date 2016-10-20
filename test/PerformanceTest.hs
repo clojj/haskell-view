@@ -13,6 +13,7 @@ import           Debug.Trace
 import Lib
 import PerformanceTextTest
 import PerformanceByteStringTest
+import PerformanceByteStringUTF8Test
 
 
 main :: IO ()
@@ -84,5 +85,6 @@ main = do
   defaultMain [
     bgroup "insert tokens"
      [ bench "Text" $ nf (doText contentText) tsText
-     , bench "ByteString" $ nf (doByteString contentByteString) ts]
+     , bench "ByteString" $ nf (doByteString contentByteString) ts
+     , bench "ByteStringUTF8" $ nf (doByteStringUTF8 contentByteString) ts]
      ]

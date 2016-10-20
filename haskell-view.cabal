@@ -51,7 +51,7 @@ executable haskell-view-servant
 executable performance-test
   hs-source-dirs:      test
   main-is:             PerformanceTest.hs
-  other-modules:       PerformanceTextTest, PerformanceByteStringTest, TestHelpers
+  other-modules:       PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest, TestHelpers
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , haskell-view

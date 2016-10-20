@@ -8,6 +8,7 @@ Server
 ======
 
 * WIP interleave all tokens
+  with positions ?
 
 * provide project structure (stack.yaml, cabal) to client (directory-tree)
 
@@ -27,13 +28,13 @@ Server
 Optimizations
 =============
 
-* replace showRichTokenStream by actual source; check for differences !
+* WIP use results from Performance*Test in the server
+  TODO: measure space/heap usage in Performance*Test
+  TODO: PerformanceSequenceOfCharTest
 
 * cache results of lexing/parsing/usage-links etc. on the server, last-modified optimization etc.
 
 * request as "one-source-at-a-time" vs. complete project in one request
-
-* String/ByteString efficiency... use Data.Text ?
 
 * Protolude et al. ?
 

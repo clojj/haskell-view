@@ -51,7 +51,7 @@ library
 executable performance-test
   hs-source-dirs:      test
   main-is:             PerformanceTest.hs
-  other-modules:       PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest, TestHelpers
+  other-modules:       PerformanceFoldOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest, TestHelpers
   ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , haskell-view

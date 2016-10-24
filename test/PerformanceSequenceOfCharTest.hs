@@ -10,12 +10,7 @@ import           Debug.Trace
 import Lib
 import TestHelpers
 
--- TODO
--- 1) elemIndicesL
--- 2) insertAt
-
 type Token  = (Located, Seq Char)
--- type Acc = (Seq Char, Int, V.Vector Int, Int)
 type Acc = (Seq Char, Int, V.Vector Int, Int, Int)
 
 doSeqChar :: Seq Char -> [Token] -> Seq Char
@@ -37,5 +32,4 @@ foldSeqChar (src, l, ls, cOff, aOff) (((l1, c1), _), token) =
     off = ls V.! (l1-1) + c1 + cOff
     (src1, src2) = S.splitAt off src
   in
-    (src1 >< token >< src2, l', ls, cOff', aOff')
-
+    ((src1 |> ':') >< (token |> ':') >< src2, l', ls, cOff', aOff')

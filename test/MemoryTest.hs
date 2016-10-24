@@ -6,16 +6,21 @@ import qualified Data.Text.IO as TIO
 import qualified Data.ByteString.Char8 as C
 import           Data.ByteString.Builder
 import           Data.Monoid
+import           Data.Sequence as S
+import           Data.Foldable
+
 import           Debug.Trace
 
 import Lib
 import PerformanceTextTest
 import PerformanceByteStringTest
 import PerformanceByteStringUTF8Test
+import PerformanceSequenceOfCharTest
 
 
 main :: IO ()
 main = do
+  content <- readFile "test/testdata/TestMod.hs"
   contentText <- TIO.readFile "test/testdata/TestMod.hs"
   contentByteString <- C.readFile "test/testdata/TestMod.hs"
 
@@ -75,11 +80,14 @@ main = do
   -- let resultText = doText contentText tsText
   -- TIO.putStr resultText
 
-  print "ByteString"
-  let result = doByteString contentByteString ts
-  C.putStr result
+  -- print "ByteString"
+  -- let result = doByteString contentByteString ts
+  -- C.putStr result
 
   -- print "ByteStringUTF8"
   -- let result = doByteStringUTF8 contentByteString ts
   -- C.putStr result
 
+  print "Seq Char"
+  let result = doSeqChar (S.fromList content) ts
+  print $ toList result

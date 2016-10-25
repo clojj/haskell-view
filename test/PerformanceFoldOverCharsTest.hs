@@ -7,9 +7,8 @@ import qualified Data.Text as T
 import           Debug.Trace
 
 import Lib
-import TestHelpers
 
-type Token  = (Located, String)
+type Token  = (TokenSpan, String)
 type Acc = ([Token], Seq Char, Int, Int)
 
 doFoldOverChars :: T.Text -> [Token] -> Seq Char
@@ -29,16 +28,16 @@ f (ts, src, l, c) ch =
       [] ->
         ([], src |> ch, l, c)
 
-      ((((l1, c1), (l2, c2)), t1) : (_, t2) : tokens) ->
+      (((p1@(Pos l1 c1), p2@(Pos l2 c2)), t1) : (_, t2) : tokens) ->
         if l1 == l && c1 == c then
-            if l1 == l2 && c1 == c2 then
+            if p1 == p2 then
               (tokens, (src |> ':') >< (fromList t1 |> ':') >< (fromList t2 |> ':' |> ch), l', c')
             else
               (tail ts, (src |> ':') >< (fromList t1 |> ':' |> ch), l', c')
         else
           (ts, src |> ch, l', c')
 
-      ((((l1, c1), _), t1) : tokens) ->
+      (((p1@(Pos l1 c1), _), t1) : tokens) ->
         if l1 == l && c1 == c then
           (tokens, (src |> ':') >< (fromList t1 |> ':' |> ch), l', c')
         else

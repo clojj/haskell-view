@@ -8,9 +8,8 @@ import           Data.Monoid
 import           Debug.Trace
 
 import Lib
-import TestHelpers
 
-type Token  = (Located, UTF8.ByteString)
+type Token  = (TokenSpan, UTF8.ByteString)
 type Acc  = ((Int, Int), UTF8.ByteString)
 
 f :: (Int, [Int]) -> Char -> (Int, [Int])
@@ -28,7 +27,7 @@ doByteStringUTF8 src ts =
     snd result <> end
 
 foldIt :: V.Vector Int -> UTF8.ByteString -> Acc -> Token -> Acc
-foldIt ls src ((l, c), src') (((l1, c1), (l2, c2)), token) =
+foldIt ls src ((l, c), src') ((Pos l1 c1, Pos l2 c2), token) =
   let
     ws      = substr src ls (l, c) 1 (l1, c1) 0
     lexeme  = substr src ls (l1, c1) 0 (l2, c2) 1

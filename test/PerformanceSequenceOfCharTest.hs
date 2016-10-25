@@ -8,9 +8,8 @@ import           Data.Sequence as S hiding (reverse)
 import           Debug.Trace
 
 import Lib
-import TestHelpers
 
-type Token  = (Located, Seq Char)
+type Token  = (TokenSpan, Seq Char)
 type Acc = (Seq Char, Int, V.Vector Int, Int, Int)
 
 doSeqChar :: Seq Char -> [Token] -> Seq Char
@@ -23,7 +22,7 @@ doSeqChar src ts = {-# SCC "doSeqChar" #-}
     src'
 
 foldSeqChar :: Acc -> Token -> Acc
-foldSeqChar (src, l, ls, cOff, aOff) (((l1, c1), _), token) =
+foldSeqChar (src, l, ls, cOff, aOff) ((Pos l1 c1, _), token) =
   let
     (l', cOff') = if l == l1 then (l, cOff) else (l1, 0)
     insertLen = length token + 2

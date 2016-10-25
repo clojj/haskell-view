@@ -9,9 +9,8 @@ import           Data.Monoid
 import           Debug.Trace
 
 import Lib
-import TestHelpers
 
-type Token  = (Located, T.Text)
+type Token  = (TokenSpan, T.Text)
 type Acc  = ((Int, Int), T.Text)
 
 f :: (Int, [Int]) -> Char -> (Int, [Int])
@@ -29,7 +28,7 @@ doText src ts =
     snd result <> end
 
 foldText :: V.Vector Int -> T.Text -> Acc -> Token -> Acc
-foldText ls src ((l, c), src') (((l1, c1), (l2, c2)), token) =
+foldText ls src ((l, c), src') ((Pos l1 c1, Pos l2 c2), token) =
   let
     ws      = substrText src ls (l, c) 1 (l1, c1) 0
     lexeme  = substrText src ls (l1, c1) 0 (l2, c2) 1

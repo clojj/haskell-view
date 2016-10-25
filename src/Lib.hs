@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib ( ghcMain, substr, substrText, toOffset ) where
+module Lib where
 
 import qualified GHC.SYB.Utils         as SYB
 
@@ -31,6 +31,13 @@ import Data.Monoid
 
 import Data.Vector ((!), Vector)
 import qualified Data.ByteString.Char8 as BSC
+
+-- types
+data LineColumnPos = Pos Int Int
+  deriving (Eq, Ord, Show)
+
+type TokenSpan  = (LineColumnPos, LineColumnPos)
+
 
 
 ghcMain :: IO ()
@@ -104,7 +111,7 @@ foldToken lines result locToken =
       -- TODO need the position in client ?
       -- position = show fromLine ++ " " ++ show fromCol ++ " " ++ show toLine ++ " "++ show toCol ++ " "
 
-  result <> "(" <> showRichTokenAsTestData locToken <> ", " <> "\"" <> tokenAsString (GHC.unLoc locToken) <> "\"" <> ")," <> "\n"
+  result <> "(" <> showTokenSpan locToken <> ", " <> "\"" <> tokenAsString (GHC.unLoc locToken) <> "\"" <> ")," <> "\n"
 
 -- TODO map tokens to class-names
 tokenAsString :: GHC.Token -> Text
@@ -143,12 +150,12 @@ substrText src ls (l1, c1) o1 (l2, c2) o2 =
     len  = off2 - off1
   in (take len . drop off1) src
 
-showRichTokenAsTestData :: GHC.Located GHC.Token -> Text
-showRichTokenAsTestData t =
+showTokenSpan :: GHC.Located GHC.Token -> Text
+showTokenSpan t =
   let (GHC.RealSrcSpan loc) = GHC.getLoc t
       [l1, c1, l2, c2] = [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
   in
-    T.pack $ show ((l1, c1), (l2, c2))
+    T.pack $ show (Pos l1 c1, Pos l2 c2)
 
 showRichToken :: (GHC.Located GHC.Token, String) -> String
 showRichToken (t, s) = tok ++ "\n" ++ srcloc where

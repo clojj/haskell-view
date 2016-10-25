@@ -28,6 +28,9 @@ Server
 Optimizations
 =============
 
+* from Data.Sequence
+  "Warning: The size of a Seq must not exceed maxBound::Int"
+  
 * WIP use results from Performance*Test in the server
 
   WIP measure space/heap usage in MemoryTest

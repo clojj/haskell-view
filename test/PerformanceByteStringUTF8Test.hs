@@ -32,5 +32,5 @@ foldIt ls src ((l, c), src') ((Pos l1 c1, Pos l2 c2), token) =
     ws      = substr src ls (l, c) 1 (l1, c1) 0
     lexeme  = substr src ls (l1, c1) 0 (l2, c2) 1
   in
-    ((l2, c2), src' <> ws <> ":" <> token <> ":" <> lexeme <> ":")
+    ((l2, c2), src' <> ws <> ":" <> token <> ":" <> lexeme)
 

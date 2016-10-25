@@ -14,12 +14,12 @@ type Acc = ([Token], Seq Char, LineColumnPos)
 doFoldOverChars :: T.Text -> [Token] -> Seq Char
 doFoldOverChars src ts =
   let
-    (_, src', _) = T.foldl' f (ts, empty, Pos 1 1) src
+    (_, src', _) = T.foldl' foldIt (ts, empty, Pos 1 1) src
   in
     src'
 
-f :: Acc -> Char -> Acc
-f (ts, src, p@(Pos l c)) ch =
+foldIt :: Acc -> Char -> Acc
+foldIt (ts, src, p@(Pos l c)) ch =
   let (l', c') = case ch of
                    '\n' -> (l + 1, 1)
                    _    -> (l, c + 1)
@@ -30,16 +30,21 @@ f (ts, src, p@(Pos l c)) ch =
 
       (((p1@(Pos l1 c1), p2@(Pos l2 c2)), t1) : (_, t2) : tokens) ->
         if p1 == p then
+          let token1 = (':' <| fromList t1) |> ':'
+              token2 = fromList t2 |> ':'
+          in
             if p1 == p2 then
-              (tokens, (src |> ':') >< (fromList t1 |> ':') >< (fromList t2 |> ':' |> ch), Pos l' c')
+              (tokens, (src >< token1 >< token2) |> ch, Pos l' c')
             else
-              (tail ts, (src |> ':') >< (fromList t1 |> ':' |> ch), Pos l' c')
+              (tail ts, (src >< token1) |> ch, Pos l' c')
         else
           (ts, src |> ch, Pos l' c')
 
       (((p1@(Pos l1 c1), _), t1) : tokens) ->
-        if p1 == p then
-          (tokens, (src |> ':') >< (fromList t1 |> ':' |> ch), Pos l' c')
-        else
-          (ts, src |> ch, Pos l' c')
+          let token1 = (':' <| fromList t1) |> ':'
+          in
+            if p1 == p then
+              (tokens, (src >< token1) |> ch, Pos l' c')
+            else
+              (ts, src |> ch, Pos l' c')
 

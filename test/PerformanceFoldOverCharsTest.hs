@@ -29,18 +29,18 @@ f (ts, src, l, c) ch =
       [] ->
         ([], src |> ch, l, c)
 
-      ((((l1, c1), (l2, c2)), t1) : (loc2, t2) : tokens) ->
+      ((((l1, c1), (l2, c2)), t1) : (_, t2) : tokens) ->
         if l1 == l && c1 == c then
             if l1 == l2 && c1 == c2 then
               (tokens, (src |> ':') >< (fromList t1 |> ':') >< (fromList t2 |> ':' |> ch), l', c')
             else
-              ((loc2, t2) : tokens, (src |> ':') >< (fromList t1 |> ':' |> ch), l', c')
+              (tail ts, (src |> ':') >< (fromList t1 |> ':' |> ch), l', c')
         else
-          ((((l1, c1), (l2, c2)), t1) : (loc2, t2) : tokens, src |> ch, l', c')
+          (ts, src |> ch, l', c')
 
-      ((((l1, c1), (l2, c2)), t1) : tokens) ->
+      ((((l1, c1), _), t1) : tokens) ->
         if l1 == l && c1 == c then
           (tokens, (src |> ':') >< (fromList t1 |> ':' |> ch), l', c')
         else
-          ((((l1, c1), (l2, c2)), t1) : tokens, src |> ch, l', c')
+          (ts, src |> ch, l', c')
 

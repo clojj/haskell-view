@@ -13,20 +13,24 @@ type Acc = ([Token], Seq Char, LineColumnPos, Maybe Seq Char)
 
 doFoldOverChars :: T.Text -> [Token] -> Seq Char
 doFoldOverChars src ts =
-  let (_, src', _, _) = T.foldl' foldIt (ts, empty, Pos 1 1, Nothing) src
+  let (_, src', _, accChars) = T.foldl' foldIt (ts, empty, Pos 1 1, Nothing) src
   in
-    src'
+    case accChars of
+      Just ac -> src' |> ac
+      _       -> src'
 
 foldIt :: Acc -> Char -> Acc
 foldIt (ts, src, p@(Pos l c), accChars) ch =
 
-  let accLength = case accChars of
-                    Just ac -> length ac
-                    Nothing -> 1
+  let accCh = case accChars of
+                    Just ac -> singleton ac
+                    Nothing -> empty
                              
+  let accLength = length accCh
+  
   let (l', c') = case ch of
-                   '\n' -> (l + 1, accLength)
-                   _    -> (l, c + accLength)
+                   '\n' -> (l + 1, 1 + accLength)
+                   _    -> (l, c + 1 + accLength)
 
   in
     case ts of

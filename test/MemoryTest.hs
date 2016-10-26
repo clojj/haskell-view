@@ -16,7 +16,6 @@ import PerformanceTextTest
 import PerformanceByteStringTest
 import PerformanceByteStringUTF8Test
 import PerformanceSequenceOfCharTest
-import PerformanceFoldOverCharsTest
 import PerformanceLoopOverCharsTest
 
 
@@ -92,10 +91,6 @@ main = do
 
   -- print "Seq Char"
   -- let result = doSeqChar (S.fromList content) ts
-  -- putStrLn $ toList result
-
-  -- print "fold over Char"
-  -- let result = doFoldOverChars contentText tsString
   -- putStrLn $ toList result
 
   print "LOOP over Text"

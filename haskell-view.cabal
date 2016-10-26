@@ -51,7 +51,7 @@ executable haskell-view-servant
 executable performance-test
   hs-source-dirs:      test
   main-is:             PerformanceTest.hs
-  other-modules:       PerformanceLoopOverCharsTest, PerformanceFoldOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest
+  other-modules:       PerformanceLoopOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest
   ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , haskell-view
@@ -67,7 +67,7 @@ executable performance-test
 executable memory-test
   hs-source-dirs:      test
   main-is:             MemoryTest.hs
-  other-modules:       PerformanceLoopOverCharsTest, PerformanceFoldOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest
+  other-modules:       PerformanceLoopOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest
   ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , haskell-view

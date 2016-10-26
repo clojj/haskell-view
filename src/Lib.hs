@@ -120,13 +120,13 @@ tokenAsString t = case t of
   GHC.ITmodule          -> "ITmodule"
   GHC.ITblockComment s  -> "ITblockComment"
 
-  GHC.ITocurly          -> "special"
-  GHC.ITccurly          -> "special"
-  GHC.ITvocurly         -> "special"
-  GHC.ITvccurly         -> "special"
+  GHC.ITocurly          -> "ITocurly"
+  GHC.ITccurly          -> "ITccurly"
+  GHC.ITvocurly         -> "ITvocurly"
+  GHC.ITvccurly         -> "ITvccurly"
   -- TODO all tokens !
-  -- _               -> T.pack $ show t
-  _               -> "todo"
+  _               -> T.pack $ show t
+  -- _               -> "todo"
 
 -- helper functions
 

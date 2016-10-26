@@ -27,7 +27,6 @@ foldIt (ts, src, p@(Pos l c), accChars) ch =
                     Nothing -> empty
                              
   let accLength = length accCh
-  
   let (l', c') = case ch of
                    '\n' -> (l + 1, 1 + accLength)
                    _    -> (l, c + 1 + accLength)
@@ -42,12 +41,11 @@ foldIt (ts, src, p@(Pos l c), accChars) ch =
           in
             if p1 == p then
               if p1 == p2 then
-                (tokens, (src >< token), Pos l c, fmap (|> ch) accChars)
+                (tokens, (src >< token), Pos l c, Just accCh |> ch)
               else
-                (tokens, (src >< token) |> ch, Pos l' c')
+                (tokens, (src >< token) >< accCh, Pos l' c', Nothing)
             else
-              (ts, src |> ch, Pos l' c')
-
+              (ts, src >< accCh, Pos l' c', Nothing)
 
 
 --      (((p1@(Pos l1 c1), p2@(Pos l2 c2)), t1) : (_, t2) : tokens) ->

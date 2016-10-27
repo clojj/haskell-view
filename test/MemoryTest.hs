@@ -94,6 +94,6 @@ main = do
   -- putStrLn $ toList result
 
   print "LOOP over Text"
-  print tsString
+  -- print tsString
   let result = doLoopOverChars contentText tsString
   putStrLn $ toList result

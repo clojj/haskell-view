@@ -3,12 +3,15 @@ module PerformanceLoopOverCharsTest (doLoopOverChars) where
 import           Control.Arrow
 import           Data.Sequence
 import qualified Data.Text as T
+import qualified Data.Foldable as F
 import           Data.Char
 import           Data.List as L
 
 import           Debug.Trace
 
 import Lib
+import Tokens
+
 
 type Token  = (TokenSpan, String)
 type Acc = (LineColumnPos, [Token], Seq Char)
@@ -25,7 +28,7 @@ advance :: Seq Char -> [Token] -> LineColumnPos -> (Char, T.Text) -> AdvanceMode
 advance result tokens@(((tpos1@(Pos l1 c1), tpos2), tname) : ts) pos@(Pos l c) (ch, chs) mode =
 
   -- TODO after start of token (at tpos1), immediately advance to tpos2
-  -- is this faster ?
+  -- is this really faster ?
 
   let (l', c') = case mode of
                   Line    -> (l + 1, 1)
@@ -41,16 +44,14 @@ advance result tokens@(((tpos1@(Pos l1 c1), tpos2), tname) : ts) pos@(Pos l c) (
     else
       (result |> ch, tokens, l', c', decons chs)
 
--- is this faster ?
+-- is this really faster ?
 fromText :: T.Text -> Seq Char
 fromText txt = fromList $ T.unpack txt
 
 doLoopOverChars :: T.Text -> [Token] -> Seq Char
 doLoopOverChars src ts =
 
--- TODO prepare tokens with insertWhitespace
-
-  loopOver (Pos 1 1, ts, empty) $ decons src
+  loopOver (Pos 1 1, F.toList $ insertWhitespace ts, empty) $ decons src
 
   where
 

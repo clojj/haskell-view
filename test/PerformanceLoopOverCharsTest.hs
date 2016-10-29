@@ -4,6 +4,7 @@ import           Control.Arrow
 import           Data.Sequence
 import qualified Data.Text as T
 import           Data.Char
+import           Data.List as L
 
 import           Debug.Trace
 
@@ -19,8 +20,13 @@ data AdvanceMode = Column | Line
 
 type Step = (Seq Char, [Token], Int, Int, (Char, T.Text))
 
+-- TODO use LiquidHaskell for list length > 0
 advance :: Seq Char -> [Token] -> LineColumnPos -> (Char, T.Text) -> AdvanceMode -> Step
 advance result tokens@(((tpos1@(Pos l1 c1), tpos2), tname) : ts) pos@(Pos l c) (ch, chs) mode =
+
+  -- TODO after start of token (at tpos1), immediately advance to tpos2
+  -- is this faster ?
+
   let (l', c') = case mode of
                   Line    -> (l + 1, 1)
                   Column  -> (l, c + 1)
@@ -35,9 +41,14 @@ advance result tokens@(((tpos1@(Pos l1 c1), tpos2), tname) : ts) pos@(Pos l c) (
     else
       (result |> ch, tokens, l', c', decons chs)
 
+-- is this faster ?
+fromText :: T.Text -> Seq Char
+fromText txt = fromList $ T.unpack txt
 
 doLoopOverChars :: T.Text -> [Token] -> Seq Char
 doLoopOverChars src ts =
+
+-- TODO prepare tokens with insertWhitespace
 
   loopOver (Pos 1 1, ts, empty) $ decons src
 
@@ -46,14 +57,13 @@ doLoopOverChars src ts =
     loopOver :: Acc -> (Char, T.Text) -> Seq Char
     loopOver (pos@(Pos l c), tokens, result) (ch, chs) =
 
-        let advance' = advance result tokens pos (ch, chs)
-            (result', tokens', l', c', (ch', chs')) = case tokens of
-                                                        []
-                                                          -> (result |> ch, [], 0, 0, decons chs)
+        let (result', tokens', l', c', (ch', chs')) = case tokens of
+                                                        [] -> ((result |> ch) >< fromText chs, [], 0, 0, (ch, chs))
 
-                                                        _ -> case ch of
-                                                                '\n' -> advance' Line
-                                                                _    -> advance' Column
+                                                        _  -> let advance' = advance result tokens pos (ch, chs)
+                                                              in case ch of
+                                                                   '\n' -> advance' Line
+                                                                   _    -> advance' Column
 
       in
         if T.length chs == 0 then

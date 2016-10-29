@@ -116,9 +116,9 @@ main = do
   defaultMain [
     bgroup "insert tokens"
       [
-        bench "Text" $ nf (doText contentText) tsText
+        -- bench "Text" $ nf (doText contentText) tsText
       -- bench "ByteString" $ nf (doByteString contentByteString) ts
       -- bench "ByteStringUTF8" $ nf (doByteStringUTF8 contentByteString) ts
       -- bench "Seq Char" $ nf (doSeqChar contentSeq) tsSeq
-      , bench "LOOP over Text" $ nf (doLoopOverChars contentText) tsString]
+       bench "loop over Char (in Text)" $ nf (doLoopOverChars contentText) tsString]
      ]

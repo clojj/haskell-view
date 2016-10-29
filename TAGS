@@ -1,0 +1,191 @@
+
+./app/ServantServer.hs,268
+module Main Main4,5
+type IOAPI IOAPI18,19
+ioAPI ioAPI22,23
+ioAPI ioAPI23,24
+server server25,26
+server server26,27
+type MyHandler MyHandler28,29
+getFile getFile30,31
+getFile getFile31,32
+app app33,34
+app app34,35
+main main36,37
+main main37,38
+
+./Setup.hs,15
+main main1,2
+
+./src/GetModules.hs,408
+module GetModules GetModules0,1
+getModules getModules15,16
+getModules getModules16,17
+modulesFromCabalFile modulesFromCabalFile24,25
+modulesFromCabalFile modulesFromCabalFile26,27
+modulesFromDirectory modulesFromDirectory37,38
+modulesFromDirectory modulesFromDirectory39,40
+srcDirFromRoot srcDirFromRoot48,49
+srcDirFromRoot srcDirFromRoot49,50
+useDirs useDirs54,55
+useDirs useDirs55,56
+
+./src/Lib.hs,691
+module Lib Lib2,3
+data LineColumnPos LineColumnPos35,36
+data LineColumnPos = Pos Pos35,36
+type TokenSpan TokenSpan38,39
+ghcMain ghcMain42,43
+ghcMain ghcMain43,44
+process process64,65
+process process65,66
+foldToken foldToken106,107
+foldToken foldToken107,108
+tokenAsString tokenAsString116,117
+tokenAsString tokenAsString117,118
+toOffset toOffset132,133
+toOffset toOffset133,134
+substr substr136,137
+substr substr137,138
+substrText substrText144,145
+substrText substrText145,146
+showTokenSpan showTokenSpan152,153
+showTokenSpan showTokenSpan153,154
+showRichToken showRichToken159,160
+showRichToken showRichToken160,161
+tokenLocs tokenLocs164,165
+
+./test/MemoryTest.hs,34
+main main21,22
+main main22,23
+
+./test/PerformanceByteStringTest.hs,248
+module PerformanceByteStringTest PerformanceByteStringTest1,2
+type Token Token11,12
+type Acc Acc12,13
+doByteString doByteString14,15
+doByteString doByteString15,16
+foldByteString foldByteString23,24
+foldByteString foldByteString24,25
+
+./test/PerformanceByteStringUTF8Test.hs,262
+module PerformanceByteStringUTF8Test PerformanceByteStringUTF8Test1,2
+type Token Token11,12
+type Acc Acc12,13
+f f14,15
+f f15,16
+doByteStringUTF8 doByteStringUTF819,20
+doByteStringUTF8 doByteStringUTF820,21
+foldIt foldIt28,29
+foldIt foldIt29,30
+
+./test/PerformanceLoopOverCharsTest.hs,422
+module PerformanceLoopOverCharsTest PerformanceLoopOverCharsTest0,1
+type Token Token11,12
+type Acc Acc12,13
+decons decons14,15
+decons decons15,16
+data AdvanceMode AdvanceMode17,18
+data AdvanceMode = Column Column17,18
+data AdvanceMode = Column | LineLine17,18
+type Step Step19,20
+advance advance21,22
+advance advance22,23
+doLoopOverChars doLoopOverChars38,39
+doLoopOverChars doLoopOverChars39,40
+
+./test/PerformanceSequenceOfCharTest.hs,232
+module PerformanceSequenceOfCharTest PerformanceSequenceOfCharTest0,1
+type Token Token11,12
+type Acc Acc12,13
+doSeqChar doSeqChar14,15
+doSeqChar doSeqChar15,16
+foldSeqChar foldSeqChar23,24
+foldSeqChar foldSeqChar24,25
+
+./test/PerformanceTest.hs,34
+main main20,21
+main main21,22
+
+./test/PerformanceTextTest.hs,210
+module PerformanceTextTest PerformanceTextTest1,2
+type Token Token12,13
+type Acc Acc13,14
+f f15,16
+f f16,17
+doText doText20,21
+doText doText21,22
+foldText foldText29,30
+foldText foldText30,31
+
+./test/Spec.hs,31
+main main8,9
+main main9,10
+
+./test/stack-project/.stack-work/dist/x86_64-osx/Cabal-1.24.0.0/build/autogen/Paths_stack_project.hs,1022
+module Paths_stack_project Paths_stack_project3,4
+catchIO catchIO17,18
+catchIO catchIO19,20
+catchIO catchIO23,24
+catchIO catchIO25,26
+version version27,28
+version version28,29
+bindir, libdir, datadir, libexecdir, sysconfdir sysconfdir29,30
+bindir, libdir, datadir, libexecdir,libexecdir29,30
+bindir, libdir, datadir,datadir29,30
+bindir, libdir,libdir29,30
+bindir,bindir29,30
+bindir bindir31,32
+libdir libdir32,33
+datadir datadir33,34
+libexecdir libexecdir34,35
+sysconfdir sysconfdir35,36
+getBinDir, getLibDir, getDataDir, getLibexecDir, getSysconfDir getSysconfDir37,38
+getBinDir, getLibDir, getDataDir, getLibexecDir,getLibexecDir37,38
+getBinDir, getLibDir, getDataDir,getDataDir37,38
+getBinDir, getLibDir,getLibDir37,38
+getBinDir,getBinDir37,38
+getBinDir getBinDir38,39
+getLibDir getLibDir39,40
+getDataDir getDataDir40,41
+getLibexecDir getLibexecDir41,42
+getSysconfDir getSysconfDir42,43
+getDataFileName getDataFileName44,45
+getDataFileName getDataFileName45,46
+
+./test/stack-project/app/Main.hs,52
+module Main Main0,1
+main main4,5
+main main5,6
+
+./test/stack-project/Setup.hs,15
+main main1,2
+
+./test/stack-project/src/Lib.hs,65
+module LibLib0,1
+someFunc someFunc4,5
+someFunc someFunc5,6
+
+./test/stack-project/src/TestMod.hs,92
+module TestModTestMod0,1
+someFunc someFunc4,5
+someFunc someFunc5,6
+multi multi10,11
+
+./test/stack-project/test/Spec.hs,30
+main main0,1
+main main1,2
+
+./test/testdata/FSNotify.hs,88
+module FSNotify FSNotify3,4
+forkFinally forkFinally6,7
+forkFinally forkFinally7,8
+
+./test/testdata/LucidDemo.hs,32
+module LucidDemo LucidDemo3,4
+
+./test/testdata/TestMod.hs,92
+module TestModTestMod0,1
+someFunc someFunc4,5
+someFunc someFunc5,6
+multi multi10,11

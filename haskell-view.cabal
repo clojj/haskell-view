@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib, GetModules
+  exposed-modules:     Lib, GetModules, Tokens
   build-depends:       base >= 4.7 && < 5
                      , ghc
                      , ghc-paths
@@ -27,6 +27,7 @@ library
                      , text
                      , bytestring
                      , vector
+                     , containers
 
   default-language:    Haskell2010
 

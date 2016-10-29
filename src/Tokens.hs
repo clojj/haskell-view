@@ -32,6 +32,7 @@ decideToken (result, prevPos@(Pos l c)) token@((pos1@(Pos l1 c1), pos2@(Pos l2 c
           0 -> (s, pos2)
           _ -> (s >< fromList (L.unfoldr (produceLineToken token (l2 + 1)) ldiff), pos2)
 
+-- TODO 'Pos 0 0' currently used as marker for "ends at next token"
 produceLineToken :: Token -> Int -> Int -> Maybe (Token, Int)
 produceLineToken (_, tname) lstart l =
   case l of

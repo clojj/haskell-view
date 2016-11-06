@@ -52,7 +52,7 @@ executable haskell-view-servant
 executable performance-test
   hs-source-dirs:      test
   main-is:             PerformanceTest.hs
-  other-modules:       PerformanceLoopOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest
+  other-modules:       PerformanceLoopByteStringUTF8Test, PerformanceLoopOverCharsTest, PerformanceByteStringUTF8Test, PerformanceSequenceOfCharTest, PerformanceTextTest, PerformanceByteStringTest
   ghc-options:         -O2 -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , haskell-view

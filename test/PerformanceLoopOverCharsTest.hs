@@ -23,7 +23,30 @@ data AdvanceMode = Column | Line
 
 type Step = (Seq Char, [Token], Int, Int, (Char, T.Text))
 
--- TODO use LiquidHaskell for list length > 0
+doLoopOverChars :: T.Text -> [Token] -> Seq Char
+doLoopOverChars src ts =
+
+  loopOver (Pos 1 1, F.toList $ insertWhitespace ts, empty) $ decons src
+
+  where
+
+    loopOver :: Acc -> (Char, T.Text) -> Seq Char
+    loopOver (pos@(Pos l c), tokens, result) (ch, chs) =
+
+        let (result', tokens', l', c', (ch', chs')) = case tokens of
+                                                        [] -> ((result |> ch) >< fromText chs, [], 0, 0, (ch, chs))
+
+                                                        _  -> let adv = advance result tokens pos (ch, chs)
+                                                              in case ch of
+                                                                   '\n' -> adv Line
+                                                                   _    -> adv Column
+
+      in
+        if T.length chs == 0 then
+          result'
+        else
+          loopOver (Pos l' c', tokens', result') (ch', chs')
+
 advance :: Seq Char -> [Token] -> LineColumnPos -> (Char, T.Text) -> AdvanceMode -> Step
 advance result tokens@(((tpos1@(Pos l1 c1), tpos2), tname) : ts) pos@(Pos l c) (ch, chs) mode =
 
@@ -48,26 +71,3 @@ advance result tokens@(((tpos1@(Pos l1 c1), tpos2), tname) : ts) pos@(Pos l c) (
 fromText :: T.Text -> Seq Char
 fromText txt = fromList $ T.unpack txt
 
-doLoopOverChars :: T.Text -> [Token] -> Seq Char
-doLoopOverChars src ts =
-
-  loopOver (Pos 1 1, F.toList $ insertWhitespace ts, empty) $ decons src
-
-  where
-
-    loopOver :: Acc -> (Char, T.Text) -> Seq Char
-    loopOver (pos@(Pos l c), tokens, result) (ch, chs) =
-
-        let (result', tokens', l', c', (ch', chs')) = case tokens of
-                                                        [] -> ((result |> ch) >< fromText chs, [], 0, 0, (ch, chs))
-
-                                                        _  -> let advance' = advance result tokens pos (ch, chs)
-                                                              in case ch of
-                                                                   '\n' -> advance' Line
-                                                                   _    -> advance' Column
-
-      in
-        if T.length chs == 0 then
-          result'
-        else
-          loopOver (Pos l' c', tokens', result') (ch', chs')

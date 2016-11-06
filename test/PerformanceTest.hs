@@ -17,6 +17,9 @@ import PerformanceByteStringUTF8Test
 import PerformanceSequenceOfCharTest
 import PerformanceLoopOverCharsTest
 
+import PerformanceLoopByteStringUTF8Test
+import Data.ByteString.UTF8 as UTF8
+
 
 main :: IO ()
 main = do
@@ -24,6 +27,7 @@ main = do
   let contentSeq = fromList content
   contentText <- TIO.readFile "test/testdata/TestMod.hs"
   contentByteString <- C.readFile "test/testdata/TestMod.hs"
+  let contentByteStringUTF8 = UTF8.fromString content
 
   let tsText =
         [((Pos 1 1,Pos 1 7), "ITmodule"),
@@ -113,12 +117,17 @@ main = do
   -- C.putStr result
   -- C.writeFile "webclient/docroot/TestMod.out.bs" result
 
+  print "ByteStringUTF8"
+  let result = loopOverForElm contentByteStringUTF8 (Pos 1 1, mempty) tsString
+  C.putStr result
+  -- C.writeFile "webclient/docroot/TestMod.out.bs" result
+
   defaultMain [
     bgroup "insert tokens"
       [
         -- bench "Text" $ nf (doText contentText) tsText
       -- bench "ByteString" $ nf (doByteString contentByteString) ts
-      -- bench "ByteStringUTF8" $ nf (doByteStringUTF8 contentByteString) ts
+      bench "ByteStringUTF8" $ nf (loopOverForElm contentByteStringUTF8 (Pos 1 1, mempty)) tsString,
       -- bench "Seq Char" $ nf (doSeqChar contentSeq) tsSeq
-       bench "loop over Char (in Text)" $ nf (doLoopOverChars contentText) tsString]
+      bench "loop over Char (in Text)" $ nf (doLoopOverChars contentText) tsString]
      ]

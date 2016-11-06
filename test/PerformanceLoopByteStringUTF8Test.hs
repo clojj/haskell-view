@@ -11,11 +11,6 @@ import Tokens
 
 -- import Debug.Trace
 
--- data Pos = Pos Int Int deriving (Eq, Show)
-
--- type Token        = ((Pos, Pos), String)
--- type Acc          = (Pos, ByteString)
-
 type Token  = (TokenSpan, String)
 type Acc = (LineColumnPos, ByteString)
 

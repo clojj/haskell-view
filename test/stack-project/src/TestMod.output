@@ -1,0 +1,20 @@
+[6:ITmodule:module[1:WS: [7:ITconid:TestMod[5:WS-:
+    [1:todo:([1:WS: [8:todo:someFunc[5:WS-:
+    [1:todo:)[1:WS: [5:todo:where[2:WS-:
+
+[0:ITvocurly:[8:todo:someFunc[1:WS: [2:todo:::[1:WS: [2:ITconid:IO[1:WS: [1:todo:([1:todo:)[1:WS-:
+[0:ITsemi:[8:todo:someFunc[1:WS: [1:todo:=[1:WS: [2:todo:do[3:WS-:
+  [0:ITvocurly:[3:todo:let[1:WS: [0:ITvocurly:[4:todo:wahr[1:WS: [1:todo:=[1:WS: [4:todo:case[1:WS: [1:todo:([1:todo:2[1:WS: [2:todo:==[1:WS: [1:todo:1[1:WS: [1:todo:+[1:WS: [1:todo:1[1:todo:)[1:WS: [2:todo:of[16:WS-:
+               [0:ITvocurly:[4:ITconid:True[1:WS: [2:todo:->[1:WS: [7:todo:"true!"[16:WS-:
+               [0:ITsemi:[1:todo:_[4:WS:    [2:todo:->[1:WS: [5:todo:"WTF"[4:WS-:
+
+  [0:ITvccurly:[0:ITvccurly:[0:ITsemi:[8:todo:putStrLn[1:WS: [10:todo:"someFunc"[2:WS-:
+
+[66:ITblockComment-:{- A multiline comment
+     which can continue for many lines
+  -}[1:WS-:
+[0:ITvccurly:[0:ITsemi:[5:todo:multi[1:WS: [1:todo:=[1:WS: [23:todo-:"line1\
+\line2\
+\line3"[3:WS:   [24:todo:-- a single line comment[2:WS-:
+
+[0:ITsemi:

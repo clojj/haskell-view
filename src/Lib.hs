@@ -21,16 +21,13 @@ import GHC.Paths ( libdir )
 import qualified Language.Haskell.Refact.Utils.GhcBugWorkArounds as HaRe
 
 import GetModules
-import Prelude hiding (readFile, writeFile, take, drop)
-import qualified Data.Text as T
-import Data.Text.IO (readFile, writeFile)
-import Data.Text hiding (concatMap, map, concat, foldl')
-import Data.String
-import Data.List (foldl')
 import Data.Monoid
 
-import Data.Vector ((!), Vector)
 import qualified Data.ByteString.Char8 as BSC
+
+import Prelude hiding (splitAt, length, drop, take)
+import Data.ByteString.UTF8
+import qualified Data.ByteString as B
 
 -- types
 data LineColumnPos = Pos Int Int
@@ -38,6 +35,9 @@ data LineColumnPos = Pos Int Int
 
 type TokenSpan  = (LineColumnPos, LineColumnPos)
 
+type Token  = (TokenSpan, String)
+type Acc = (LineColumnPos, ByteString)
+type Advancement  = (Int, Int)
 
 
 ghcMain :: IO ()
@@ -96,25 +96,23 @@ process moduleName = do
             Nothing  -> return ()
             Just f -> do
               content <- readFile f
+              let tokens = map locTokenToPos ts
+              writeFile ("./webclient/docroot/" ++ moduleName) $ toString $ loopOverForElm (fromString content) (Pos 1 1, mempty) tokens
 
-              -- TODO interleave tokens with content
-              let lines = splitOn "\n" content
-              let tokenizedSource = foldl' (foldToken lines) empty ts
+locTokenToPos :: GHC.Located GHC.Token -> Token
+locTokenToPos locToken =
+  (tokenLocToPos locToken, tokenAsString $ GHC.unLoc locToken)
 
-              writeFile ("./webclient/docroot/" ++ moduleName) $ content <> "<EOF>\n" <> "[" <> tokenizedSource <> "]"
+tokenLocToPos :: GHC.Located GHC.Token -> TokenSpan
+tokenLocToPos t =
+  let (GHC.RealSrcSpan loc) = GHC.getLoc t
+      [l1, c1, l2, c2] = [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
+  in
+    (Pos l1 c1, Pos l2 c2)
 
--- TODO replace with code from PerformanceTest
-foldToken :: [Text] -> Text -> GHC.Located GHC.Token -> Text
-foldToken lines result locToken =
-  -- let (GHC.RealSrcSpan loc) = GHC.getLoc locToken
-  --     [l1, c1, l2, c2] = fmap (1 -) $ [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
-      -- TODO need the position in client ?
-      -- position = show fromLine ++ " " ++ show fromCol ++ " " ++ show toLine ++ " "++ show toCol ++ " "
-
-  result <> "(" <> showTokenSpan locToken <> ", " <> "\"" <> tokenAsString (GHC.unLoc locToken) <> "\"" <> ")," <> "\n"
 
 -- TODO map tokens to class-names
-tokenAsString :: GHC.Token -> Text
+tokenAsString :: GHC.Token -> String
 tokenAsString t = case t of
   GHC.ITconid s         -> "ITconid"
   GHC.ITmodule          -> "ITmodule"
@@ -124,38 +122,14 @@ tokenAsString t = case t of
   GHC.ITccurly          -> "ITccurly"
   GHC.ITvocurly         -> "ITvocurly"
   GHC.ITvccurly         -> "ITvccurly"
+  GHC.ITsemi            -> "ITsemi"
+
   -- TODO all tokens !
-  _               -> T.pack $ show t
-  -- _               -> "todo"
+  -- _               -> T.pack $ show t
+  _               -> "todo"
+
 
 -- helper functions
-
-toOffset :: Vector Int -> (Int, Int) -> Int
-toOffset ls (l, c) =
-  (ls ! (l-1)) + c
-
-substr :: BSC.ByteString -> Vector Int -> (Int, Int) -> Int -> (Int, Int) -> Int -> BSC.ByteString
-substr src ls (l1, c1) o1 (l2, c2) o2 =
-  let
-    off1 = (ls ! (l1-1)) + c1 + o1
-    off2 = (ls ! (l2-1)) + c2 + o2
-    len  = off2 - off1
-  in (BSC.take len . BSC.drop off1) src
-
-substrText :: Text -> Vector Int -> (Int, Int) -> Int -> (Int, Int) -> Int -> Text
-substrText src ls (l1, c1) o1 (l2, c2) o2 =
-  let
-    off1 = (ls ! (l1-1)) + c1 + o1
-    off2 = (ls ! (l2-1)) + c2 + o2
-    len  = off2 - off1
-  in (take len . drop off1) src
-
-showTokenSpan :: GHC.Located GHC.Token -> Text
-showTokenSpan t =
-  let (GHC.RealSrcSpan loc) = GHC.getLoc t
-      [l1, c1, l2, c2] = [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
-  in
-    T.pack $ show (Pos l1 c1, Pos l2 c2)
 
 showRichToken :: (GHC.Located GHC.Token, String) -> String
 showRichToken (t, s) = tok ++ "\n" ++ srcloc where
@@ -163,3 +137,67 @@ showRichToken (t, s) = tok ++ "\n" ++ srcloc where
   tok = show $ GHC.unLoc t
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
+
+--
+
+loopOverForElm :: ByteString -> Acc -> [Token] -> ByteString
+loopOverForElm bs (currentPos, result) tokens =
+  case tokens of
+
+    [] -> case length bs of
+            0 -> result
+            _ -> result <> buildPart (length bs) True "WS" bs
+
+    ((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname) : tokenTail ->
+      -- putStrLn ("currentPos " ++ show currentPos ++ " pos1 " ++ show pos1 ++ " advanceLinesAndColumns " ++ show (advanceLinesAndColumns currentPos pos1)) >>
+
+      if currentPos == pos1 then
+        if pos1 == pos2 then
+          loopOverForElm bs (Pos l1 c1, result <> buildPart 0 False tname mempty) tokenTail
+        else
+          let advancement             = advanceLinesAndColumns pos1 pos2
+              (len, (lexeme, bsTail)) = spanAdvancementElm advancement bs
+          in loopOverForElm bsTail (Pos l2 c2, result <> buildPart len (advancesLines advancement) tname lexeme) tokenTail
+      else
+        let advancement                 = advanceLinesAndColumns currentPos pos1
+            (len, (whitespace, bsTail)) = spanAdvancementElm advancement bs
+        in loopOverForElm bsTail (Pos l1 c1, result <> buildPart len (advancesLines advancement) "WS" whitespace) tokens
+
+  where
+
+    buildPart :: Int -> Bool -> String -> ByteString -> ByteString
+    buildPart len multiline element text =
+      sepElmStart <> fromString (show len) <> separator <> fromString element <> (if multiline then postFixMultiline else mempty) <> separator <> text <> mempty
+
+    advanceLinesAndColumns :: LineColumnPos -> LineColumnPos -> Advancement
+    advanceLinesAndColumns p1@(Pos l1 c1) p2@(Pos l2 c2)
+        | p1 == p2 = (0, 0)
+        | l2 - l1 > 0 = (l2 - l1, c2)
+        | otherwise = (0, c2 - c1)
+
+    advancesLines :: Advancement -> Bool
+    advancesLines = (> 0) . fst
+
+    spanAdvancementElm :: Advancement -> ByteString -> (Int, (ByteString, ByteString))
+    spanAdvancementElm (l, c) bs
+      | l == 0 = (c, splitAt c bs)
+      -- | l > 0  = splitAt ((lineOffset l bs) + c - 1) bs
+      | l > 0  = splitAtElm (l, c - 1) bs
+    spanAdvancementElm (_, _) _ = undefined
+
+    -- LiquidHaskell: l > 0
+    {-@ splitAtElm :: {v:_ | fst v > 0} -> B.ByteString -> (Int, (B.ByteString, B.ByteString)) @-}
+
+    splitAtElm :: Advancement -> B.ByteString -> (Int, (B.ByteString, B.ByteString))
+    splitAtElm (ls, cs) bs = loop 0 (ls, cs) bs
+      where loop a (l, c) _ | (l, c) == (0, 0) = (a, B.splitAt a bs)
+            loop a (l, c) bs1 = case decode bs1 of
+                             Just (ch,y) -> case ch of
+                                              '\n' -> loop (a+y) (l-1, cs) (B.drop y bs1)
+                                              _    -> loop (a+y) (l, c-1) (B.drop y bs1)
+                             Nothing    ->  (0, (bs, B.empty))
+
+    separator = fromString ":"
+    postFixMultiline = fromString "-"
+    sepElmStart = fromString "["
+    -- sepElmEnd    = fromString "]"

@@ -55,7 +55,7 @@ initialModel =
 
 init : ( Model, Cmd Msg )
 init =
-    ( initialModel, getHaskell "Lib" )
+    ( initialModel, getHaskell "TestMod" )
 
 
 -- UPDATE
@@ -74,24 +74,13 @@ update msg model =
 
         GetSourceSucceed data ->
             -- TODO replace by folding over interleaved tokens/source
-            case (split "<EOF>" data) of
-                [] ->
+            case data of
+                "" ->
                     ( Model (Html.text "error"), Cmd.none )
 
-                src :: rest ->
-                    let
-                        tokens =
-                            case (List.head rest) of
-                                Just ts ->
-                                    ts
-
-                                Nothing ->
-                                    "no tokens"
-
-                        html =
-                            createView src tokens
-                    in
-                        ( (Model (Debug.log "HTML\n" html)), Cmd.none )
+                src -> let html = createView src
+                        in
+                          ( (Model (Debug.log "HTML\n" html)), Cmd.none )
 
         GetSourceFail _ ->
             ( model, Cmd.none )
@@ -132,12 +121,10 @@ view { html } =
 -- create Html from update
 
 
-createView : String -> String -> Html Msg
-createView src tokens =
+createView : String -> Html Msg
+createView src =
     Html.div []
-        [ Html.div [] (List.map viewLine (split "\n" src))
-        , Html.div [] [ Html.text ("TOKENS: " ++ tokens) ]
-        ]
+        [ Html.div [] (List.map viewLine (split "\n" src)) ]
 
 
 viewLine : String -> Html Msg

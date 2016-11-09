@@ -58,7 +58,9 @@ init =
     ( initialModel, getHaskell "TestMod" )
 
 
+
 -- UPDATE
+
 
 type Msg
     = GetSource String
@@ -78,9 +80,12 @@ update msg model =
                 "" ->
                     ( Model (Html.text "error"), Cmd.none )
 
-                src -> let html = createView src
-                        in
-                          ( (Model (Debug.log "HTML\n" html)), Cmd.none )
+                src ->
+                    let
+                        html =
+                            createView src
+                    in
+                        ( (Model (Debug.log "HTML\n" html)), Cmd.none )
 
         GetSourceFail _ ->
             ( model, Cmd.none )
@@ -124,16 +129,15 @@ view { html } =
 createView : String -> Html Msg
 createView src =
     Html.div []
-    -- TODO parse src
-    -- <tr>
-    --   <td id="L23" class="blob-num js-line-number" data-line-number="23"></td>
-    --   <td id="LC23" class="blob-code blob-code-inner js-file-line">  <span class="pl-k">if</span> l1 - l == <span class="pl-c1">0</span> &amp;&amp; c1 == c <span class="pl-k">then</span></td>
-    -- </tr>
-    -- <tr>
-    --   <td id="L24" class="blob-num js-line-number" data-line-number="24"></td>
-    --   <td id="LC24" class="blob-code blob-code-inner js-file-line">    <span class="pl-c">-- virtual tokens (semi, vocurly etc)</span></td>
-    -- </tr>
-
+        -- TODO parse src
+        -- <tr>
+        --   <td id="L23" class="blob-num js-line-number" data-line-number="23"></td>
+        --   <td id="LC23" class="blob-code blob-code-inner js-file-line">  <span class="pl-k">if</span> l1 - l == <span class="pl-c1">0</span> &amp;&amp; c1 == c <span class="pl-k">then</span></td>
+        -- </tr>
+        -- <tr>
+        --   <td id="L24" class="blob-num js-line-number" data-line-number="24"></td>
+        --   <td id="LC24" class="blob-code blob-code-inner js-file-line">    <span class="pl-c">-- virtual tokens (semi, vocurly etc)</span></td>
+        -- </tr>
         [ Html.div [] (List.map viewLine (split "\n" src)) ]
 
 

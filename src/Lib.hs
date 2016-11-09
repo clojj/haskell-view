@@ -62,7 +62,29 @@ ghcMain =
 
         mapM_ process (concatMap snd moduleNames)
 
-process :: String -> GHC.Ghc ()
+ghcMainTest :: IO String
+ghcMainTest =
+    -- TODO send errors/exceptions/messages to client !
+    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
+
+      GHC.liftIO $ GHC.runGhc (Just libdir) $ do
+        dflags <- GHC.getSessionDynFlags
+        let dflags' = dflags { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
+            -- { GHC.importPaths = ["./test/testdata/"] }
+            -- { GHC.hscTarget = GHC.HscNothing }
+            dflags'' = dflags'
+
+        GHC.setSessionDynFlags dflags''
+
+        moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/stack-project/"]
+        useDirs (concatMap fst moduleNames)
+        GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
+        GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
+        GHC.load GHC.LoadAllTargets
+
+        process "TestMod"
+
+process :: String -> GHC.Ghc String
 process moduleName = do
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
 
@@ -91,13 +113,17 @@ process moduleName = do
 
         -- load original .hs file
         let file = GHC.ml_hs_file $ GHC.ms_location modSum
-        GHC.liftIO $
+        output <- GHC.liftIO $
           case file of
-            Nothing  -> return ()
+            Nothing  -> return ""
             Just f -> do
               content <- readFile f
               let tokens = map locTokenToPos ts
-              writeFile ("./webclient/docroot/" ++ moduleName) $ toString $ loopOverForElm (fromString content) (Pos 1 1, mempty) tokens
+              return $ toString $ loopOverForElm (fromString content) (Pos 1 1, mempty) tokens
+
+        GHC.liftIO $ writeFile ("./webclient/docroot/" ++ moduleName) output
+
+        return output
 
 locTokenToPos :: GHC.Located GHC.Token -> Token
 locTokenToPos locToken =

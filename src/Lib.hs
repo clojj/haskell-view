@@ -40,48 +40,36 @@ type Acc = (LineColumnPos, ByteString)
 type Advancement  = (Int, Int)
 
 
+loadAll :: GHC.Ghc [([FilePath], [String])]
+loadAll = do
+  dflags <- GHC.getSessionDynFlags
+  let dflags' = dflags { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
+      -- { GHC.importPaths = ["./test/testdata/"] }
+      -- { GHC.hscTarget = GHC.HscNothing }
+
+  GHC.setSessionDynFlags dflags'
+
+  moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/stack-project/"]
+  useDirs (concatMap fst moduleNames)
+  GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
+  GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
+  GHC.load GHC.LoadAllTargets
+  return moduleNames
+
 ghcMain :: IO ()
 ghcMain =
     -- TODO send errors/exceptions/messages to client !
-    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
-
-      GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-        dflags <- GHC.getSessionDynFlags
-        let dflags' = dflags { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
-            -- { GHC.importPaths = ["./test/testdata/"] }
-            -- { GHC.hscTarget = GHC.HscNothing }
-            dflags'' = dflags'
-
-        GHC.setSessionDynFlags dflags''
-
-        moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/stack-project/"]
-        useDirs (concatMap fst moduleNames)
-        GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
-        GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
-        GHC.load GHC.LoadAllTargets
-
-        mapM_ process (concatMap snd moduleNames)
+  GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
+    GHC.liftIO $ GHC.runGhc (Just libdir) $ do
+      moduleNames <- loadAll
+      mapM_ process (concatMap snd moduleNames)
 
 ghcMainTest :: IO String
 ghcMainTest =
-    -- TODO send errors/exceptions/messages to client !
     GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
 
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-        dflags <- GHC.getSessionDynFlags
-        let dflags' = dflags { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
-            -- { GHC.importPaths = ["./test/testdata/"] }
-            -- { GHC.hscTarget = GHC.HscNothing }
-            dflags'' = dflags'
-
-        GHC.setSessionDynFlags dflags''
-
-        moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/stack-project/"]
-        useDirs (concatMap fst moduleNames)
-        GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
-        GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
-        GHC.load GHC.LoadAllTargets
-
+        loadAll
         process "TestMod"
 
 process :: String -> GHC.Ghc String

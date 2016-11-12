@@ -25,9 +25,9 @@ import Data.Monoid
 
 import qualified Data.ByteString.Char8 as BSC
 
-import Prelude hiding (splitAt, length, drop, take)
+import Prelude hiding (splitAt, length, drop, take, break, lines, foldl)
 import Data.ByteString.UTF8
-import qualified Data.ByteString as B
+import qualified Data.ByteString as B hiding (lines)
 
 -- types
 data LineColumnPos = Pos Int Int
@@ -40,8 +40,8 @@ type Acc = (LineColumnPos, ByteString)
 type Advancement  = (Int, Int)
 
 
-loadAll :: GHC.Ghc [([FilePath], [String])]
-loadAll = do
+loadAllModules :: GHC.Ghc [([FilePath], [String])]
+loadAllModules = do
   dflags <- GHC.getSessionDynFlags
   let dflags' = dflags { GHC.hscTarget = GHC.HscInterpreted, GHC.ghcLink =  GHC.LinkInMemory }
       -- { GHC.importPaths = ["./test/testdata/"] }
@@ -61,7 +61,7 @@ ghcMain =
     -- TODO send errors/exceptions/messages to client !
   GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
     GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-      moduleNames <- loadAll
+      moduleNames <- loadAllModules
       mapM_ process (concatMap snd moduleNames)
 
 ghcMainTest :: IO String
@@ -69,7 +69,7 @@ ghcMainTest =
     GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
 
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-        loadAll
+        loadAllModules
         process "TestMod"
 
 process :: String -> GHC.Ghc String
@@ -160,29 +160,40 @@ loopOverForElm bs (currentPos, result) tokens =
 
     [] -> case length bs of
             0 -> result
-            _ -> result <> buildPart (length bs) True "WS" bs
+            _ -> result <> buildPart True "WS" bs
 
     ((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname) : tokenTail ->
       -- putStrLn ("currentPos " ++ show currentPos ++ " pos1 " ++ show pos1 ++ " advanceLinesAndColumns " ++ show (advanceLinesAndColumns currentPos pos1)) >>
 
       if currentPos == pos1 then
         if pos1 == pos2 then
-          loopOverForElm bs (Pos l1 c1, result <> buildPart 0 False tname mempty) tokenTail
+          loopOverForElm bs (Pos l1 c1, result <> buildPart False tname mempty) tokenTail
         else
           let advancement             = advanceLinesAndColumns pos1 pos2
               (len, (lexeme, bsTail)) = spanAdvancementElm advancement bs
-          in loopOverForElm bsTail (Pos l2 c2, result <> buildPart len (advancesLines advancement) tname lexeme) tokenTail
+          in loopOverForElm bsTail (Pos l2 c2, result <> buildPart (advancesLines advancement) tname lexeme) tokenTail
       else
         let advancement                 = advanceLinesAndColumns currentPos pos1
             (len, (whitespace, bsTail)) = spanAdvancementElm advancement bs
-        in loopOverForElm bsTail (Pos l1 c1, result <> buildPart len (advancesLines advancement) "WS" whitespace) tokens
+        in loopOverForElm bsTail (Pos l1 c1, result <> buildPart (advancesLines advancement) "WS" whitespace) tokens
 
   where
 
-    buildPart :: Int -> Bool -> String -> ByteString -> ByteString
-    buildPart len multiline element text =
-      sepElmStart <> fromString (show len) <> separator <> fromString element <> (if multiline then postFixMultiline else mempty) <> separator <> text <> mempty
-
+    buildPart :: Bool -> String -> ByteString -> ByteString
+    buildPart multiline element text
+      | multiline =
+          let ls = lines' txt
+              tokenLines = map (\l -> separator <> elem <> separator <> l) ls
+          in  mconcat tokenLines
+        
+      | otherwise = separator <> elem <> separator <> txt
+      
+      where
+        elem = fromString element
+        txt = case element of
+                "WS" -> foldl (\result ch -> if ch == '\n' then result <> newline else result <> wsElem) mempty text
+                _    -> text
+    
     advanceLinesAndColumns :: LineColumnPos -> LineColumnPos -> Advancement
     advanceLinesAndColumns p1@(Pos l1 c1) p2@(Pos l2 c2)
         | p1 == p2 = (0, 0)
@@ -211,7 +222,8 @@ loopOverForElm bs (currentPos, result) tokens =
                                               _    -> loop (a+y) (l, c-1) (B.drop y bs1)
                              Nothing    ->  (0, (bs, B.empty))
 
-    separator = fromString ":"
-    postFixMultiline = fromString "-"
-    sepElmStart = fromString "["
-    -- sepElmEnd    = fromString "]"
+    -- todo find unicode ?
+    separator = fromString "{}" -- "⇨"
+    newline = fromString "\n"
+    wsElem = fromString "_"
+    

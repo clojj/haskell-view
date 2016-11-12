@@ -1,7 +1,7 @@
 module TestMod
     ( someFunc
-    ) where
-
+    ) where   
+ 
 someFunc :: IO ()
 someFunc = do
   let wahr = case (2 == 1 + 1) of

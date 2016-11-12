@@ -1,20 +1,20 @@
-{}ITmodule{}module{}WS{}_{}ITconid{}TestMod
-{}WS{}____{}todo{}({}WS{}_{}todo{}someFunc
-{}WS{}____{}todo{}){}WS{}_{}todo{}where{}WS{}___
-{}WS{}_
-{}ITvocurly{}{}todo{}someFunc{}WS{}_{}todo{}::{}WS{}_{}ITconid{}IO{}WS{}_{}todo{}({}todo{})
-{}ITsemi{}{}todo{}someFunc{}WS{}_{}todo{}={}WS{}_{}todo{}do
-{}WS{}__{}ITvocurly{}{}todo{}let{}WS{}_{}ITvocurly{}{}todo{}wahr{}WS{}_{}todo{}={}WS{}_{}todo{}case{}WS{}_{}todo{}({}todo{}2{}WS{}_{}todo{}=={}WS{}_{}todo{}1{}WS{}_{}todo{}+{}WS{}_{}todo{}1{}todo{}){}WS{}_{}todo{}of
-{}WS{}_______________{}ITvocurly{}{}ITconid{}True{}WS{}_{}todo{}->{}WS{}_{}todo{}"true!"
-{}WS{}_______________{}ITsemi{}{}todo{}_{}WS{}____{}todo{}->{}WS{}_{}todo{}"WTF"
+⇨ITmodule⇨module⇨WS⇨ ⇨ITconid⇨TestMod
+⇨WS⇨    ⇨todo⇨(⇨WS⇨ ⇨todo⇨someFunc
+⇨WS⇨    ⇨todo⇨)⇨WS⇨ ⇨todo⇨where⇨WS⇨   
+⇨WS⇨ 
+⇨ITvocurly⇨todo⇨someFunc⇨WS⇨ ⇨todo⇨::⇨WS⇨ ⇨ITconid⇨IO⇨WS⇨ ⇨todo⇨(⇨todo⇨)
+⇨ITsemi⇨todo⇨someFunc⇨WS⇨ ⇨todo⇨=⇨WS⇨ ⇨todo⇨do
+⇨WS⇨  ⇨ITvocurly⇨todo⇨let⇨WS⇨ ⇨ITvocurly⇨todo⇨wahr⇨WS⇨ ⇨todo⇨=⇨WS⇨ ⇨todo⇨case⇨WS⇨ ⇨todo⇨(⇨todo⇨2⇨WS⇨ ⇨todo⇨==⇨WS⇨ ⇨todo⇨1⇨WS⇨ ⇨todo⇨+⇨WS⇨ ⇨todo⇨1⇨todo⇨)⇨WS⇨ ⇨todo⇨of
+⇨WS⇨               ⇨ITvocurly⇨ITconid⇨True⇨WS⇨ ⇨todo⇨->⇨WS⇨ ⇨todo⇨"true!"
+⇨WS⇨               ⇨ITsemi⇨todo⇨_⇨WS⇨    ⇨todo⇨->⇨WS⇨ ⇨todo⇨"WTF"
 
-{}WS{}__{}ITvccurly{}{}ITvccurly{}{}ITsemi{}{}todo{}putStrLn{}WS{}_{}todo{}"someFunc"
+⇨WS⇨  ⇨ITvccurly⇨ITvccurly⇨ITsemi⇨todo⇨putStrLn⇨WS⇨ ⇨todo⇨"someFunc"
 
-{}ITblockComment{}{- A multiline comment
-{}ITblockComment{}     which can continue for many lines
-{}ITblockComment{}  -}
-{}ITvccurly{}{}ITsemi{}{}todo{}multi{}WS{}_{}todo{}={}WS{}_{}todo{}"line1\
-{}todo{}\line2\
-{}todo{}\line3"{}WS{}___{}todo{}-- a single line comment
+⇨ITblockComment⇨{- A multiline comment
+⇨ITblockComment⇨     which can continue for many lines
+⇨ITblockComment⇨  -}
+⇨ITvccurly⇨ITsemi⇨todo⇨multi⇨WS⇨ ⇨todo⇨=⇨WS⇨ ⇨todo⇨"line1\
+⇨todo⇨\line2\
+⇨todo⇨\line3"⇨WS⇨   ⇨todo⇨-- a single line comment
 
-{}ITsemi{}
+⇨ITsemi

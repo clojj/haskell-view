@@ -35,7 +35,7 @@ data LineColumnPos = Pos Int Int
 
 type TokenSpan  = (LineColumnPos, LineColumnPos)
 
-type Token  = (TokenSpan, String)
+type Token  = (TokenSpan, ByteString)
 type Acc = (LineColumnPos, ByteString)
 type Advancement  = (Int, Int)
 
@@ -107,7 +107,7 @@ process moduleName = do
             Just f -> do
               content <- readFile f
               let tokens = map locTokenToPos ts
-              return $ toString $ loopOverForElm (fromString content) (Pos 1 1, mempty) tokens
+              return $ toString (loopOverForElm (fromString content) (Pos 1 1, mempty) tokens <> newline)
 
         GHC.liftIO $ writeFile ("./webclient/docroot/" ++ moduleName) output
 
@@ -126,7 +126,7 @@ tokenLocToPos t =
 
 
 -- TODO map tokens to class-names
-tokenAsString :: GHC.Token -> String
+tokenAsString :: GHC.Token -> ByteString
 tokenAsString t = case t of
   GHC.ITconid s         -> "ITconid"
   GHC.ITmodule          -> "ITmodule"
@@ -170,31 +170,24 @@ loopOverForElm bs (currentPos, result) tokens =
           loopOverForElm bs (Pos l1 c1, result <> buildPart False tname mempty) tokenTail
         else
           let advancement             = advanceLinesAndColumns pos1 pos2
-              (len, (lexeme, bsTail)) = spanAdvancementElm advancement bs
-          in loopOverForElm bsTail (Pos l2 c2, result <> buildPart (advancesLines advancement) tname lexeme) tokenTail
+              (bsHead, bsTail) = spanAdvancementElm advancement bs
+          in loopOverForElm bsTail (Pos l2 c2, result <> buildPart (advancesLines advancement) tname bsHead) tokenTail
       else
         let advancement                 = advanceLinesAndColumns currentPos pos1
-            (len, (whitespace, bsTail)) = spanAdvancementElm advancement bs
-        in loopOverForElm bsTail (Pos l1 c1, result <> buildPart (advancesLines advancement) "WS" whitespace) tokens
+            (bsHead, bsTail) = spanAdvancementElm advancement bs
+        in loopOverForElm bsTail (Pos l1 c1, result <> buildPart (advancesLines advancement) "WS" bsHead) tokens
 
   where
 
-    buildPart :: Bool -> String -> ByteString -> ByteString
-    buildPart multiline element text
-      | multiline =
-          let ls = lines' txt
-              tokenLines = map
-                (\l -> if l == newline then newline else separator <> elem <> separator <> l)
-                ls
-          in  mconcat tokenLines
-        
-      | otherwise = separator <> elem <> separator <> txt
-      
-      where
-        elem = fromString element
-        txt = case element of
-                "WS" -> foldl (\result ch -> if ch == '\n' then result <> newline else result <> wsElem) mempty text
-                _    -> text
+    buildPart :: Bool -> ByteString -> ByteString -> ByteString
+    buildPart multiline token text
+      | multiline = mconcat $ map (\l -> if l == newline then newline else separator <> token <> separator <> l) $ lines' text
+      | text == mempty = separator <> token
+      | otherwise = separator <> token <> separator <> text
+      -- where
+      --   txt = case token of
+      --           "WS" -> foldl (\result ch -> if ch == '\n' then result <> newline else result <> wsElemDebug) mempty text
+      --           _    -> text
 
     advanceLinesAndColumns :: LineColumnPos -> LineColumnPos -> Advancement
     advanceLinesAndColumns p1@(Pos l1 c1) p2@(Pos l2 c2)
@@ -205,27 +198,26 @@ loopOverForElm bs (currentPos, result) tokens =
     advancesLines :: Advancement -> Bool
     advancesLines = (> 0) . fst
 
-    spanAdvancementElm :: Advancement -> ByteString -> (Int, (ByteString, ByteString))
+    spanAdvancementElm :: Advancement -> ByteString -> (ByteString, ByteString)
     spanAdvancementElm (l, c) bs
-      | l == 0 = (c, splitAt c bs)
-      -- | l > 0  = splitAt ((lineOffset l bs) + c - 1) bs
-      | l > 0  = splitAtElm (l, c - 1) bs
+      | l == 0 = splitAt c bs
+      | l > 0  = splitAtAdvancement (l, c - 1) bs
     spanAdvancementElm (_, _) _ = undefined
 
     -- LiquidHaskell: l > 0
-    {-@ splitAtElm :: {v:_ | fst v > 0} -> B.ByteString -> (Int, (B.ByteString, B.ByteString)) @-}
+    {-@ splitAtAdvancement :: {v:_ | fst v > 0} -> B.ByteString -> (B.ByteString, B.ByteString) @-}
 
-    splitAtElm :: Advancement -> B.ByteString -> (Int, (B.ByteString, B.ByteString))
-    splitAtElm (ls, cs) bs = loop 0 (ls, cs) bs
-      where loop a (l, c) _ | (l, c) == (0, 0) = (a, B.splitAt a bs)
+    splitAtAdvancement :: Advancement -> B.ByteString -> (B.ByteString, B.ByteString)
+    splitAtAdvancement (ls, cs) bs = loop 0 (ls, cs) bs
+      where loop a (l, c) _ | (l, c) == (0, 0) = B.splitAt a bs
             loop a (l, c) bs1 = case decode bs1 of
                              Just (ch,y) -> case ch of
                                               '\n' -> loop (a+y) (l-1, cs) (B.drop y bs1)
                                               _    -> loop (a+y) (l, c-1) (B.drop y bs1)
-                             Nothing    ->  (0, (bs, B.empty))
+                             Nothing    ->  (bs, B.empty)
 
-    -- todo find unicode ?
-    separator = fromString "{}" -- "⇨"
-    newline = fromString "\n"
-    wsElem = fromString "_"
+    -- TODO use unicode separator here ?
+    separator = fromString "⇨" -- "{}" -- "⇨"
+    -- wsElemDebug = fromString "_"
     
+newline = fromString "\n"

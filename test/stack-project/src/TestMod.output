@@ -1,20 +1,20 @@
-{}ITmodule{}module{}WS{}_{}ITconid{}TestMod{}WS{}
-{}WS{}____{}todo{}({}WS{}_{}todo{}someFunc{}WS{}
+{}ITmodule{}module{}WS{}_{}ITconid{}TestMod
+{}WS{}____{}todo{}({}WS{}_{}todo{}someFunc
 {}WS{}____{}todo{}){}WS{}_{}todo{}where{}WS{}___
 {}WS{}_
-{}ITvocurly{}{}todo{}someFunc{}WS{}_{}todo{}::{}WS{}_{}ITconid{}IO{}WS{}_{}todo{}({}todo{}){}WS{}
-{}ITsemi{}{}todo{}someFunc{}WS{}_{}todo{}={}WS{}_{}todo{}do{}WS{}
-{}WS{}__{}ITvocurly{}{}todo{}let{}WS{}_{}ITvocurly{}{}todo{}wahr{}WS{}_{}todo{}={}WS{}_{}todo{}case{}WS{}_{}todo{}({}todo{}2{}WS{}_{}todo{}=={}WS{}_{}todo{}1{}WS{}_{}todo{}+{}WS{}_{}todo{}1{}todo{}){}WS{}_{}todo{}of{}WS{}
-{}WS{}_______________{}ITvocurly{}{}ITconid{}True{}WS{}_{}todo{}->{}WS{}_{}todo{}"true!"{}WS{}
-{}WS{}_______________{}ITsemi{}{}todo{}_{}WS{}____{}todo{}->{}WS{}_{}todo{}"WTF"{}WS{}
-{}WS{}
-{}WS{}__{}ITvccurly{}{}ITvccurly{}{}ITsemi{}{}todo{}putStrLn{}WS{}_{}todo{}"someFunc"{}WS{}
-{}WS{}
+{}ITvocurly{}{}todo{}someFunc{}WS{}_{}todo{}::{}WS{}_{}ITconid{}IO{}WS{}_{}todo{}({}todo{})
+{}ITsemi{}{}todo{}someFunc{}WS{}_{}todo{}={}WS{}_{}todo{}do
+{}WS{}__{}ITvocurly{}{}todo{}let{}WS{}_{}ITvocurly{}{}todo{}wahr{}WS{}_{}todo{}={}WS{}_{}todo{}case{}WS{}_{}todo{}({}todo{}2{}WS{}_{}todo{}=={}WS{}_{}todo{}1{}WS{}_{}todo{}+{}WS{}_{}todo{}1{}todo{}){}WS{}_{}todo{}of
+{}WS{}_______________{}ITvocurly{}{}ITconid{}True{}WS{}_{}todo{}->{}WS{}_{}todo{}"true!"
+{}WS{}_______________{}ITsemi{}{}todo{}_{}WS{}____{}todo{}->{}WS{}_{}todo{}"WTF"
+
+{}WS{}__{}ITvccurly{}{}ITvccurly{}{}ITsemi{}{}todo{}putStrLn{}WS{}_{}todo{}"someFunc"
+
 {}ITblockComment{}{- A multiline comment
 {}ITblockComment{}     which can continue for many lines
-{}ITblockComment{}  -}{}WS{}
+{}ITblockComment{}  -}
 {}ITvccurly{}{}ITsemi{}{}todo{}multi{}WS{}_{}todo{}={}WS{}_{}todo{}"line1\
 {}todo{}\line2\
-{}todo{}\line3"{}WS{}___{}todo{}-- a single line comment{}WS{}
-{}WS{}
+{}todo{}\line3"{}WS{}___{}todo{}-- a single line comment
+
 {}ITsemi{}

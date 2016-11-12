@@ -183,7 +183,9 @@ loopOverForElm bs (currentPos, result) tokens =
     buildPart multiline element text
       | multiline =
           let ls = lines' txt
-              tokenLines = map (\l -> separator <> elem <> separator <> l) ls
+              tokenLines = map
+                (\l -> if l == newline then newline else separator <> elem <> separator <> l)
+                ls
           in  mconcat tokenLines
         
       | otherwise = separator <> elem <> separator <> txt
@@ -193,7 +195,7 @@ loopOverForElm bs (currentPos, result) tokens =
         txt = case element of
                 "WS" -> foldl (\result ch -> if ch == '\n' then result <> newline else result <> wsElem) mempty text
                 _    -> text
-    
+
     advanceLinesAndColumns :: LineColumnPos -> LineColumnPos -> Advancement
     advanceLinesAndColumns p1@(Pos l1 c1) p2@(Pos l2 c2)
         | p1 == p2 = (0, 0)

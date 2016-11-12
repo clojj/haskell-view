@@ -138,9 +138,22 @@ createView src =
         --   <td id="L24" class="blob-num js-line-number" data-line-number="24"></td>
         --   <td id="LC24" class="blob-code blob-code-inner js-file-line">    <span class="pl-c">-- virtual tokens (semi, vocurly etc)</span></td>
         -- </tr>
-        [ Html.div [] (List.map viewLine (split "\n" src)) ]
+        [ Html.div [] [ Html.table [] (List.map viewLine (split "\n" src)) ]]
 
 
 viewLine : String -> Html Msg
 viewLine line =
-    Html.div [ class [ HvCss.ITlineComment ] ] [ Html.text line, Html.br [] [] ]
+    -- Html.div [ class [ HvCss.ITconid ] ] [ Html.text line, Html.br [] [] ]
+    -- Html.tr [] [ Html.td [] (List.map viewToken (split "{}" line)) ]
+    let triples = List.take 3 (List.drop 3 (split "{}" line))
+    in Html.tr [] [ Html.td [] (viewToken' triples) ]
+
+viewToken : String -> Html Msg
+viewToken token =
+    Html.span [ class [ HvCss.ITconid ] ] [ Html.text token ]
+
+viewToken' : List String -> List (Html Msg)
+viewToken' ts = case ts of
+    token :: txt :: rest -> [Html.span [ class [ HvCss.ITconid ] ] [ Html.text txt ]]
+    _ :: [] -> [ Html.span [] [] ]
+    [] -> [ Html.span [] [] ]

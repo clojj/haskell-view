@@ -4,8 +4,7 @@ import Css exposing (..)
 import Css.Elements exposing (body, li)
 import Css.Namespace exposing (namespace)
 
-
-type CssClasses = ITlineComment
+type CssClasses = ITlineComment | ITblockComment | ITconid | ITtodo
 
 type CssIds = Page
 
@@ -25,11 +24,17 @@ css =
             , padding (px 8)
             , margin zero
             ]
-        , (.) ITlineComment
-            [ color primaryCommentColor
-            ]
+        , (.) ITlineComment [ color commentColor ]
+        , (.) ITblockComment [ color commentColor ]
+        , (.) ITconid [ color typeColor ]
+        -- , (.) ITtodo [ color todoColor ]
         ]
 
+commentColor : Color
+commentColor = hex "AA9999"
 
-primaryCommentColor : Color
-primaryCommentColor = hex "AA9999"
+typeColor : Color
+typeColor = hex "339999"
+
+todoColor : Color
+todoColor = hex "8A2BE"

@@ -13,6 +13,9 @@ someFunc = do
 {- A multiline comment
      which can continue for many lines
   -}
+func2 :: Int
+func2 = undefined
+
 multi = "line1\
 \line2\
 \line3"   -- a single line comment

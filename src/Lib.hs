@@ -182,7 +182,7 @@ loopOverForElm bs (currentPos, result) tokens =
     buildPart :: Bool -> ByteString -> ByteString -> ByteString
     buildPart multiline token text
       | multiline = mconcat $ map (\l -> if l == newline then newline else separator <> token <> separator <> l) $ lines' text
-      | text == mempty = separator <> token
+      | text == mempty = separator <> token <> separator
       | otherwise = separator <> token <> separator <> text
       -- where
       --   txt = case token of
@@ -217,7 +217,7 @@ loopOverForElm bs (currentPos, result) tokens =
                              Nothing    ->  (bs, B.empty)
 
     -- TODO use unicode separator here ?
-    separator = fromString "⇨" -- "{}" -- "⇨"
+    separator = fromString "{}" -- "⇨"
     -- wsElemDebug = fromString "_"
     
 newline = fromString "\n"

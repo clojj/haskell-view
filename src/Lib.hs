@@ -131,6 +131,7 @@ tokenAsString t = case t of
   GHC.ITconid s         -> "ITconid"
   GHC.ITmodule          -> "ITmodule"
   GHC.ITblockComment s  -> "ITblockComment"
+  GHC.ITlineComment s   -> "ITlineComment"
 
   GHC.ITocurly          -> "ITocurly"
   GHC.ITccurly          -> "ITccurly"
@@ -158,22 +159,22 @@ loopOverForElm :: ByteString -> Acc -> [Token] -> ByteString
 loopOverForElm bs (currentPos, result) tokens =
   case tokens of
 
+    -- [] -> result
     [] -> case length bs of
             0 -> result
             _ -> result <> buildPart True "WS" bs
 
     ((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname) : tokenTail ->
-      -- putStrLn ("currentPos " ++ show currentPos ++ " pos1 " ++ show pos1 ++ " advanceLinesAndColumns " ++ show (advanceLinesAndColumns currentPos pos1)) >>
 
       if currentPos == pos1 then
         if pos1 == pos2 then
           loopOverForElm bs (Pos l1 c1, result <> buildPart False tname mempty) tokenTail
         else
-          let advancement             = advanceLinesAndColumns pos1 pos2
+          let advancement      = advanceLinesAndColumns pos1 pos2
               (bsHead, bsTail) = spanAdvancementElm advancement bs
           in loopOverForElm bsTail (Pos l2 c2, result <> buildPart (advancesLines advancement) tname bsHead) tokenTail
       else
-        let advancement                 = advanceLinesAndColumns currentPos pos1
+        let advancement      = advanceLinesAndColumns currentPos pos1
             (bsHead, bsTail) = spanAdvancementElm advancement bs
         in loopOverForElm bsTail (Pos l1 c1, result <> buildPart (advancesLines advancement) "WS" bsHead) tokens
 
@@ -181,9 +182,10 @@ loopOverForElm bs (currentPos, result) tokens =
 
     buildPart :: Bool -> ByteString -> ByteString -> ByteString
     buildPart multiline token text
-      | multiline = mconcat $ map (\l -> if l == newline then newline else separator <> token <> separator <> l) $ lines' text
-      | text == mempty = separator <> token <> separator
-      | otherwise = separator <> token <> separator <> text
+      | multiline = mconcat (map (\l -> if l == newline then newline else token <> separator <> l <> separator) $ lines' text)
+      | text == mempty = token <> separator <> separator
+      | otherwise = token <> separator <> text <> separator
+      -- debug whitespace...
       -- where
       --   txt = case token of
       --           "WS" -> foldl (\result ch -> if ch == '\n' then result <> newline else result <> wsElemDebug) mempty text

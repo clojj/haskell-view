@@ -6,6 +6,7 @@ import Http
 import Task exposing (..)
 import Debug
 import String exposing (..)
+import List.Split exposing (..)
 
 
 -- import Html.Attributes exposing (..)
@@ -138,22 +139,43 @@ createView src =
         --   <td id="L24" class="blob-num js-line-number" data-line-number="24"></td>
         --   <td id="LC24" class="blob-code blob-code-inner js-file-line">    <span class="pl-c">-- virtual tokens (semi, vocurly etc)</span></td>
         -- </tr>
-        [ Html.div [] [ Html.table [] (List.map viewLine (split "\n" src)) ]]
+        [ Html.div [] [ Html.table [] (List.map (\l -> cleanLine l |> viewLine) (split "\n" src)) ]]
 
-
+cleanLine : String -> String
+cleanLine line = 
+  let s1 = case startsWith "{}" line of
+             True -> dropLeft 2 line
+             _ -> line
+      s2 = case endsWith "{}" s1 of
+             True -> dropRight 2 s1
+             _ -> s1
+  in s2
+  
 viewLine : String -> Html Msg
 viewLine line =
     -- Html.div [ class [ HvCss.ITconid ] ] [ Html.text line, Html.br [] [] ]
     -- Html.tr [] [ Html.td [] (List.map viewToken (split "{}" line)) ]
-    let triples = List.take 3 (List.drop 3 (split "{}" line))
-    in Html.tr [] [ Html.td [] (viewToken' triples) ]
+    let tokens = chunksOfLeft 2 (split "{}" line)
+    in Html.tr [] [ Html.td [] (List.map viewToken' tokens) ]
 
 viewToken : String -> Html Msg
 viewToken token =
     Html.span [ class [ HvCss.ITconid ] ] [ Html.text token ]
 
-viewToken' : List String -> List (Html Msg)
-viewToken' ts = case ts of
-    token :: txt :: rest -> [Html.span [ class [ HvCss.ITconid ] ] [ Html.text txt ]]
-    _ :: [] -> [ Html.span [] [] ]
-    [] -> [ Html.span [] [] ]
+viewToken' : List String -> Html Msg
+viewToken' token = case token of
+
+    tname :: txt :: _ -> Html.span [ class [ mapTokenToCss tname ] ] [ Html.text (String.map (\ch -> if (ch == ' ') then '_' else ch) txt) ]
+
+    _ :: [] -> Html.span [] []
+    [] -> Html.span [] []
+
+mapTokenToCss : String -> HvCss.CssClasses
+mapTokenToCss tname =
+  case tname of
+    "ITmodule" -> HvCss.ITmodule
+    "ITconid" -> HvCss.ITconid
+    "ITblockComment" -> HvCss.ITblockComment
+    "ITlineComment" -> HvCss.ITlineComment
+    "ITtodo" -> HvCss.ITtodo
+    otherwise -> HvCss.ITtodo

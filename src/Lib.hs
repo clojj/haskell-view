@@ -213,7 +213,7 @@ loopOverForElm bs (currentPos, result) tokens =
                              Nothing    ->  (bs, B.empty)
 
     -- TODO use unicode separator here ?
-    separator = fromString "\\x001F" -- IS1 "Information Separator 1"
+    separator = fromString "\x001F" -- IS1 "Information Separator 1"
     --"{}" -- "⇨"
     -- wsElemDebug = fromString "_"
     

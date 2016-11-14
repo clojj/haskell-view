@@ -1,3 +1,5 @@
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Lib where
@@ -28,6 +30,12 @@ import qualified Data.ByteString.Char8 as BSC
 import Prelude hiding (splitAt, length, drop, take, break, lines, foldl)
 import Data.ByteString.UTF8
 import qualified Data.ByteString as B hiding (lines)
+
+import Data.Data
+
+-- Data, Typeable for GHC.Token
+deriving instance Data GHC.Token
+deriving instance Typeable GHC.Token
 
 -- types
 data LineColumnPos = Pos Int Int
@@ -125,24 +133,10 @@ tokenLocToPos t =
     (Pos l1 c1, Pos l2 c2)
 
 
--- TODO map tokens to class-names
+-- TODO map tokens to token-categories (?)
 tokenAsString :: GHC.Token -> ByteString
-tokenAsString t = case t of
-  GHC.ITconid s         -> "ITconid"
-  GHC.ITmodule          -> "ITmodule"
-  GHC.ITblockComment s  -> "ITblockComment"
-  GHC.ITlineComment s   -> "ITlineComment"
-
-  GHC.ITocurly          -> "ITocurly"
-  GHC.ITccurly          -> "ITccurly"
-  GHC.ITvocurly         -> "ITvocurly"
-  GHC.ITvccurly         -> "ITvccurly"
-  GHC.ITsemi            -> "ITsemi"
-
-  -- TODO all tokens !
-  -- _               -> T.pack $ show t
-  _               -> "todo"
-
+tokenAsString t =
+  fromString $ show $ toConstr t
 
 -- helper functions
 
@@ -219,7 +213,8 @@ loopOverForElm bs (currentPos, result) tokens =
                              Nothing    ->  (bs, B.empty)
 
     -- TODO use unicode separator here ?
-    separator = fromString "{}" -- "⇨"
+    separator = fromString "\\x001F" -- IS1 "Information Separator 1"
+    --"{}" -- "⇨"
     -- wsElemDebug = fromString "_"
     
 newline = fromString "\n"

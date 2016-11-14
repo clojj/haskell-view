@@ -141,6 +141,7 @@ createView src =
         -- </tr>
         [ Html.div [] [ Html.table [] (List.map (\l -> cleanLine l |> viewLine) (split "\n" src)) ]]
 
+-- TODO avoid this here by generating lines (server-side) without leading/trailing separators !
 cleanLine : String -> String
 cleanLine line = 
   let s1 = case startsWith "{}" line of
@@ -155,7 +156,7 @@ viewLine : String -> Html Msg
 viewLine line =
     -- Html.div [ class [ HvCss.ITconid ] ] [ Html.text line, Html.br [] [] ]
     -- Html.tr [] [ Html.td [] (List.map viewToken (split "{}" line)) ]
-    let tokens = chunksOfLeft 2 (split "{}" line)
+    let tokens = chunksOfLeft 2 (split "\\x001F" line)
     in Html.tr [] [ Html.td [] (List.map viewToken' tokens) ]
 
 viewToken : String -> Html Msg
@@ -170,6 +171,8 @@ viewToken' token = case token of
     _ :: [] -> Html.span [] []
     [] -> Html.span [] []
 
+-- TODO delete this mapping and generate + use tokens.css and the String
+-- see TokenGenerator.hs
 mapTokenToCss : String -> HvCss.CssClasses
 mapTokenToCss tname =
   case tname of

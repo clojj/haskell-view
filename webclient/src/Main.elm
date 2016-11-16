@@ -144,19 +144,17 @@ createView src =
 -- TODO avoid this here by generating lines (server-side) without leading/trailing separators !
 cleanLine : String -> String
 cleanLine line = 
-  let s1 = case startsWith "{}" line of
-             True -> dropLeft 2 line
+  let s1 = case startsWith "\x001F" line of
+             True -> dropLeft 1 line
              _ -> line
-      s2 = case endsWith "{}" s1 of
-             True -> dropRight 2 s1
+      s2 = case endsWith "\x001F" s1 of
+             True -> dropRight 1 s1
              _ -> s1
   in s2
   
 viewLine : String -> Html Msg
 viewLine line =
-    -- Html.div [ class [ HvCss.ITconid ] ] [ Html.text line, Html.br [] [] ]
-    -- Html.tr [] [ Html.td [] (List.map viewToken (split "{}" line)) ]
-    let tokens = chunksOfLeft 2 (split "\\x001F" line)
+    let tokens = chunksOfLeft 2 (split "\x001F" line)
     in Html.tr [] [ Html.td [] (List.map viewToken' tokens) ]
 
 viewToken : String -> Html Msg

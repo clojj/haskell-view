@@ -82,60 +82,6 @@ ghcMainTest =
         loadAllModules
         process "TestMod"
 
--- Data.Text, new strategy
-ghcMainTestSpecNew :: IO [Token]
-ghcMainTestSpecNew =
-    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
-
-      GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-        loadAllModules
-        getAllTokens "TestMod"
-
-getAllTokens :: String -> GHC.Ghc [Token]
-getAllTokens moduleName = do
-        modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
-
-        ts <- GHC.getTokenStream (GHC.ms_mod modSum)
-
-        -- load original .hs file
-        let file = GHC.ml_hs_file $ GHC.ms_location modSum
-        GHC.liftIO $
-          case file of
-            Nothing  -> return []
-            Just f -> do
-              content <- readFile f
-              let tokens = map locTokenToPos ts
-              return tokens
-
-splitMultilineTokens :: [Token] -> [Token]
-splitMultilineTokens =
-  concatMap splitToken 
-  where
-    splitToken :: Token -> [Token]
-    splitToken token@((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname)
-      | l2 - l1 > 1 = [firstToken] ++ [((Pos l 1, EndLine), tname) | l <- [l1+1..l2-1]] ++ [lastToken] 
-      | l2 - l1 > 0 = [firstToken, lastToken]
-      | otherwise = [token]
-      where
-        firstToken = ((Pos l1 c1, EndLine), tname)
-        lastToken  = ((Pos l2 1, Pos l2 c2), tname)
-
-splitLineTokens :: Int -> [Token] -> ([Token], [Token])
-splitLineTokens l = L.span (compareLine (l >=))
-
-compareLine :: (Int -> Bool) -> Token -> Bool
-compareLine f ((Pos l1 _, _), _) = f l1
-
-tokenizeLine :: T.Text -> [Token] -> T.Text
-tokenizeLine input tokens = 
-  case input of
-    "" -> input
-    _  -> case tokens of
-            [] -> "WS\x001F" <> input
-            _  -> undefined
-
--- new strategy End
-          
 process :: String -> GHC.Ghc String
 process moduleName = do
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)

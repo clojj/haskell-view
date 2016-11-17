@@ -2,7 +2,7 @@
 
 import           Test.Hspec
 
-import           Lib
+import           LibText
 
 import           Prelude      hiding (readFile, unlines)
 import           Data.Text
@@ -45,6 +45,7 @@ main = do
       it "1) splitMultilineTokens" $
         splitMultilineTokens tokens `shouldBe` expectedTokens
 
+
       it "2) splitLineTokens fst" $ do
         let (result, _) = splitLineTokens 1 expectedTokens
         result `shouldBe` [((Pos 1 1,Pos 1 7),"ITmodule"),((Pos 1 8,Pos 1 15),"ITconid")]
@@ -61,15 +62,25 @@ main = do
         let (result, _) = splitLineTokens 3 $ L.drop 4 expectedTokens
         result `shouldBe` [((Pos 3 5,Pos 3 6),"ITcparen"),((Pos 3 7,Pos 3 12),"ITwhere")]
 
-      it "3) tokenizeLine" $ do
-        let result = tokenizeLine "module TestMod" $ L.take 2 expectedTokens
-        result `shouldBe` ""
+      it "2d) splitLineTokens fst empty" $ do
+        let (result, _) = splitLineTokens 1 $ L.drop 2 expectedTokens
+        result `shouldBe` []
 
-      it "3a) tokenizeLine only WS" $ do
+
+      it "3) tokenizeLine" $ do
+        let result = tokenizeLine "module TestMod" [((Pos 1 1,Pos 1 7),"ITmodule"),((Pos 1 8,Pos 1 15),"ITconid")]
+        result `shouldBe` "ITmodule\\x001Fmodule\\x001FWS\\x001F \\x001FITconid\\x001FTestMod"
+
+      it "3a) tokenizeLine only WS, no tokens" $ do
         let result = tokenizeLine " " []
-        result `shouldBe` "WS\x001F "
+        result `shouldBe` "WS\\x001F "
 
       it "3b) tokenizeLine empty line" $ do
         let result = tokenizeLine "" []
         result `shouldBe` ""
+
+      it "3c) tokenizeLine" $ do
+        let result = tokenizeLine " module  TestMod " [((Pos 1 2,Pos 1 8),"ITmodule"),((Pos 1 10,Pos 1 17),"ITconid")]
+        result `shouldBe` "WS\\x001F \\x001FITmodule\\x001Fmodule\\x001FWS\\x001F  \\x001FITconid\\x001FTestMod\\x001FWS\\x001F "
+
 

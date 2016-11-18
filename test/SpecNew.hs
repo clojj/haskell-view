@@ -29,7 +29,7 @@ main = do
                         ((Pos 17 1,Pos 17 1),"ITsemi"),((Pos 17 1,Pos 17 6),"ITvarid"),((Pos 17 7,Pos 17 8),"ITequal"),((Pos 17 9,Pos 17 18),"ITvarid"),
                         ((Pos 19 1,Pos 19 1),"ITsemi"),((Pos 19 1,Pos 19 6),"ITvarid"),((Pos 19 7,Pos 19 8),"ITequal"),((Pos 19 9,EndLine),"ITstring"),
                         ((Pos 20 1,EndLine),"ITstring"),
-                        ((Pos 21 1,Pos 21 8),"ITstring"),((Pos 21 11,Pos 21 35),"ITlineComment"),
+                        ((Pos 21 1,Pos 21 9),"ITstring"),((Pos 21 12,Pos 21 36),"ITlineComment"),
                         ((Pos 23 1,Pos 23 1),"ITsemi")]
   
   tokens <- ghcMainTestSpecNew
@@ -82,5 +82,23 @@ main = do
       it "3c) tokenizeLine" $ do
         let result = tokenizeLine " module  TestMod " [((Pos 1 2,Pos 1 8),"ITmodule"),((Pos 1 10,Pos 1 17),"ITconid")]
         result `shouldBe` "WS\\x001F \\x001FITmodule\\x001Fmodule\\x001FWS\\x001F  \\x001FITconid\\x001FTestMod\\x001FWS\\x001F "
+
+      it "3d) tokenizeLine multiline-middle" $ do
+        let result = tokenizeLine "  \\ line2 \\  " [((Pos 1 1, EndLine),"ITstring")]
+        result `shouldBe` "ITstring\\x001F  \\ line2 \\  "
+
+
+      -- TODO
+      it "4) mapOverLines" $ do
+        let result = mapOverLines
+                      ["module TestMod", "  \\ line2 \\  ", " module  TestMod "]
+                      [((Pos 1 1,Pos 1 7),"ITmodule"),((Pos 1 8,Pos 1 15),"ITconid"),
+                       ((Pos 2 1, EndLine),"ITstring"), ((Pos 3 2,Pos 3 8),"ITmodule"),
+                       ((Pos 3 10,Pos 3 17),"ITconid")
+                      ]
+        result `shouldBe` ["ITmodule\\x001Fmodule\\x001FWS\\x001F \\x001FITconid\\x001FTestMod",
+                           "ITstring\\x001F  \\ line2 \\  ",
+                           "WS\\x001F \\x001FITmodule\\x001Fmodule\\x001FWS\\x001F  \\x001FITconid\\x001FTestMod\\x001FWS\\x001F "
+                          ]
 
 

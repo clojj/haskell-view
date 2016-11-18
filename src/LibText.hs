@@ -28,6 +28,7 @@ import Data.Monoid
 import Prelude hiding (splitAt, length, drop, take, break, lines, foldl)
 
 import Data.Data
+import Data.Foldable as F
 import Data.List as L hiding (splitAt)
 import qualified Data.Text as T
 
@@ -53,7 +54,7 @@ loadAllModules = do
 
   GHC.setSessionDynFlags dflags'
 
-  moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["./test/stack-project/"]
+  moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["../stack-project/"]
   useDirs (concatMap fst moduleNames)
   GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
   GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
@@ -64,17 +65,20 @@ loadAllModules = do
 
 ghcMainTestSpecNew :: IO [Token]
 ghcMainTestSpecNew =
-    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
-
-      GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-        loadAllModules
-        getAllTokens "TestMod"
-
+    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $ do
+      tokens <- GHC.liftIO $ GHC.runGhc (Just libdir) $ do
+                  loadAllModules
+                  getAllTokens "TestMod"
+      -- GHC.liftIO $ print tokens
+      return tokens
+      
 getAllTokens :: String -> GHC.Ghc [Token]
 getAllTokens moduleName = do
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
 
         ts <- GHC.getTokenStream (GHC.ms_mod modSum)
+        let tokens_and_source = GHC.addSourceToTokens (GHC.mkRealSrcLoc (GHC.mkFastString "<file>") 1 1) (GHC.stringToStringBuffer "") ts
+        GHC.liftIO $ putStrLn $ concatMap showRichToken tokens_and_source
 
         -- load original .hs file
         let file = GHC.ml_hs_file $ GHC.ms_location modSum
@@ -86,6 +90,7 @@ getAllTokens moduleName = do
               let tokens = map locTokenToPos ts
               return tokens
 
+-- TODO 'inline' in mapOverLines
 splitMultilineTokens :: [Token] -> [Token]
 splitMultilineTokens =
   concatMap splitToken 
@@ -109,30 +114,33 @@ tokenizeLine :: T.Text -> [Token] -> T.Text
 tokenizeLine input tokens = 
   case input of
     "" -> input
-    _  -> loopCol 1 input tokens T.empty
-    where loopCol col inTxt ts outTxt =
+    _  -> loopCol 1 T.empty input tokens T.empty
+    where loopCol col sp inTxt ts outTxt =
             case ts of
               [] -> case inTxt of
                       "" -> outTxt
-                      _  -> outTxt <> "WS" <> separator <> inTxt
+                      _  -> outTxt <> sp <> "WS" <> separator <> inTxt
                       
               ((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname) : tsTail ->
                 if col == c1 then
-                  let size = c2 - c1
-                      (inTxtHead, inTxtTail) = T.splitAt size inTxt
-                      sep = if c2 - 1 == T.length input then
-                              T.empty
-                            else
-                              separator
-                      
-                  in loopCol c2 inTxtTail tsTail (outTxt <> tname <> separator <> inTxtHead <> sep)
-
+                  loopRecurse c2 (c2 - c1) tsTail tname
                 else
-                  let size = c1 - col
-                      (inTxtHead, inTxtTail) = T.splitAt size inTxt
-                      
-                  in loopCol c1 inTxtTail ts (outTxt <> "WS" <> separator <> inTxtHead <> separator)
-                    
+                  loopRecurse c1 (c1 - col) ts "WS"
+
+                where
+                  loopRecurse nc n nextTs t = 
+                    let (inTxtHead, inTxtTail) = T.splitAt n inTxt
+                    in loopCol nc separator inTxtTail nextTs (outTxt <> sp <> t <> separator <> inTxtHead)
+
+              ((Pos _ 1, EndLine), tname) : tsTail ->
+                tname <> separator <> inTxt
+
+mapOverLines :: [T.Text] -> [Token] -> [T.Text]
+mapOverLines inputLines tokens =
+  F.foldr' indexHelper [] $ zip [0..] inputLines
+    where
+    indexHelper (i,line) acc  = (T.pack (show i) <> " " <> line) : acc
+
                     
 locTokenToPos :: GHC.Located GHC.Token -> Token
 locTokenToPos locToken =
@@ -154,7 +162,7 @@ tokenAsString t =
 -- helper functions
 
 showRichToken :: (GHC.Located GHC.Token, String) -> String
-showRichToken (t, s) = tok ++ "\n" ++ srcloc where
+showRichToken (t, s) = "\n" ++ srcloc ++ " " ++ tok ++ " " ++ s where
   srcloc = show $ GHC.getLoc t
   tok = show $ GHC.unLoc t
 

@@ -65,12 +65,12 @@ loadAllModules = do
 
 ghcMainTestSpecNew :: IO [Token]
 ghcMainTestSpecNew =
-    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $ do
-      tokens <- GHC.liftIO $ GHC.runGhc (Just libdir) $ do
+    GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
+      GHC.liftIO $ GHC.runGhc (Just libdir) $ do
                   loadAllModules
                   getAllTokens "TestMod"
       -- GHC.liftIO $ print tokens
-      return tokens
+      -- return tokens
       
 getAllTokens :: String -> GHC.Ghc [Token]
 getAllTokens moduleName = do
@@ -137,9 +137,11 @@ tokenizeLine input tokens =
 
 mapOverLines :: [T.Text] -> [Token] -> [T.Text]
 mapOverLines inputLines tokens =
-  F.foldr' indexHelper [] $ zip [0..] inputLines
+  fst $ F.foldr' indexHelper ([], tokens) $ zip [0..] inputLines
     where
-    indexHelper (i,line) acc  = (T.pack (show i) <> " " <> line) : acc
+      indexHelper (i,line) (outputLines, ts)  =
+        -- TODO
+        ((T.pack (show i) <> " " <> line) : outputLines, ts)
 
                     
 locTokenToPos :: GHC.Located GHC.Token -> Token

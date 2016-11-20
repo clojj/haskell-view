@@ -122,20 +122,14 @@ tokenizeLine input tokens =
                 outTxt <> sp <> tname <> separator <> inTxt
 
               -- TODO use guards
-              (((l1, c1), (l2, c2)), tname) : tsTail ->
-                if (l1 == l2 && c1 == c2) then
-                loopRecurse c1 0 tsTail tname
-                  else
-                    if col == c1 then
-                      loopRecurse c2 (c2 - c1) tsTail tname
-                    else
-                      loopRecurse c1 (c1 - col) ts "WS"
-
-                where
-                  loopRecurse nc n nextTs t = 
-                    let (inTxtHead, inTxtTail) = T.splitAt n inTxt
-                    in loopCol nc separator inTxtTail nextTs (outTxt <> sp <> t <> separator <> inTxtHead)
-
+              (((l1, c1), (l2, c2)), tname) : tsTail | l1 == l2 && c1 == c2 ->
+                                                       loopRecurse c1 0 tsTail tname
+                                                     | col == c1 -> loopRecurse c2 (c2 - c1) tsTail tname
+                                                     | otherwise -> loopRecurse c1 (c1 - col) ts "WS"
+                where loopRecurse nc n nextTs t
+                        = let (inTxtHead, inTxtTail) = T.splitAt n inTxt in
+                            loopCol nc separator inTxtTail nextTs (outTxt <> sp <> t <> separator <> inTxtHead)
+                  
 
 mapOverLines :: [T.Text] -> [Token] -> [T.Text]
 mapOverLines inputLines tokens =

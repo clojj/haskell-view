@@ -105,7 +105,7 @@ main = do
         result `shouldBe` "ITstring\001F  \\ line2 \\  "
 
 
-      -- TODO
+      -- TODO inline multiline-splitting
       it "4) mapOverLines" $ do
         let result = mapOverLines
                       ["module TestMod", "  \\ line2 \\  ", " module  TestMod "]

@@ -37,11 +37,7 @@ deriving instance Data GHC.Token
 deriving instance Typeable GHC.Token
 
 -- types
-data LineColumnPos = Pos Int Int | EndLine
-  deriving (Eq, Ord, Show)
-
-type TokenSpan  = (LineColumnPos, LineColumnPos)
-
+type TokenSpan  = ((Int, Int), (Int, Int))
 type Token  = (TokenSpan, T.Text)
 
 
@@ -96,19 +92,19 @@ splitMultilineTokens =
   concatMap splitToken 
   where
     splitToken :: Token -> [Token]
-    splitToken token@((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname)
-      | l2 - l1 > 1 = [firstToken] ++ [((Pos l 1, EndLine), tname) | l <- [l1+1..l2-1]] ++ [lastToken] 
+    splitToken token@(((l1, c1), (l2, c2)), tname)
+      | l2 - l1 > 1 = [firstToken] ++ [(((l, 1), (0, 0)), tname) | l <- [l1+1..l2-1]] ++ [lastToken] 
       | l2 - l1 > 0 = [firstToken, lastToken]
       | otherwise = [token]
       where
-        firstToken = ((Pos l1 c1, EndLine), tname)
-        lastToken  = ((Pos l2 1, Pos l2 c2), tname)
+        firstToken = (((l1, c1), (0, 0)), tname)
+        lastToken  = (((l2, 1), (l2, c2)), tname)
 
 splitLineTokens :: Int -> [Token] -> ([Token], [Token])
 splitLineTokens l = L.span (compareLine (l >=))
 
 compareLine :: (Int -> Bool) -> Token -> Bool
-compareLine f ((Pos l1 _, _), _) = f l1
+compareLine f (((l1, _), _), _) = f l1
 
 tokenizeLine :: T.Text -> [Token] -> T.Text
 tokenizeLine input tokens = 
@@ -121,19 +117,25 @@ tokenizeLine input tokens =
                       "" -> outTxt
                       _  -> outTxt <> sp <> "WS" <> separator <> inTxt
                       
-              ((pos1@(Pos l1 c1), pos2@(Pos l2 c2)), tname) : tsTail ->
-                if col == c1 then
-                  loopRecurse c2 (c2 - c1) tsTail tname
-                else
-                  loopRecurse c1 (c1 - col) ts "WS"
+              -- all multilines, except last 
+              (((l1, c1), (0, 0)), tname) : _ ->
+                outTxt <> sp <> tname <> separator <> inTxt
+
+              -- TODO use guards
+              (((l1, c1), (l2, c2)), tname) : tsTail ->
+                if (l1 == l2 && c1 == c2) then
+                loopRecurse c1 0 tsTail tname
+                  else
+                    if col == c1 then
+                      loopRecurse c2 (c2 - c1) tsTail tname
+                    else
+                      loopRecurse c1 (c1 - col) ts "WS"
 
                 where
                   loopRecurse nc n nextTs t = 
                     let (inTxtHead, inTxtTail) = T.splitAt n inTxt
                     in loopCol nc separator inTxtTail nextTs (outTxt <> sp <> t <> separator <> inTxtHead)
 
-              ((Pos _ 1, EndLine), tname) : tsTail ->
-                tname <> separator <> inTxt
 
 mapOverLines :: [T.Text] -> [Token] -> [T.Text]
 mapOverLines inputLines tokens =
@@ -153,7 +155,7 @@ tokenLocToPos t =
   let (GHC.RealSrcSpan loc) = GHC.getLoc t
       [l1, c1, l2, c2] = [GHC.srcSpanStartLine, GHC.srcSpanStartCol, GHC.srcSpanEndLine, GHC.srcSpanEndCol] <*> [loc]
   in
-    (Pos l1 c1, Pos l2 c2)
+    ((l1, c1), (l2, c2))
 
 
 -- TODO map tokens to token-categories (?)
@@ -170,4 +172,4 @@ showRichToken (t, s) = "\n" ++ srcloc ++ " " ++ tok ++ " " ++ s where
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
 
-separator = "\\x001F" -- IS1 "Information Separator 1"
+separator = "\001F" -- IS1 "Information Separator 1"

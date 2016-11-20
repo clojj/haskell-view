@@ -14,7 +14,7 @@ import System.Environment
 import Servant
 import System.Directory
 
-import Lib
+import LibText
 
 type IOAPI =
   "source" :> Capture "modulename" String :> Get '[PlainText] String :<|>

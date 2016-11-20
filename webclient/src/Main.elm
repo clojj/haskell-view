@@ -139,18 +139,18 @@ createView src =
         --   <td id="L24" class="blob-num js-line-number" data-line-number="24"></td>
         --   <td id="LC24" class="blob-code blob-code-inner js-file-line">    <span class="pl-c">-- virtual tokens (semi, vocurly etc)</span></td>
         -- </tr>
-        [ Html.div [] [ Html.table [] (List.map (\l -> cleanLine l |> viewLine) (split "\n" src)) ]]
+        [ Html.div [] [ Html.table [] (List.map viewLine (split "\n" src)) ]]
 
 -- TODO avoid this here by generating lines (server-side) without leading/trailing separators !
-cleanLine : String -> String
-cleanLine line = 
-  let s1 = case startsWith "\x001F" line of
-             True -> dropLeft 1 line
-             _ -> line
-      s2 = case endsWith "\x001F" s1 of
-             True -> dropRight 1 s1
-             _ -> s1
-  in s2
+-- cleanLine : String -> String
+-- cleanLine line = 
+--   let s1 = case startsWith "\x001F" line of
+--              True -> dropLeft 1 line
+--              _ -> line
+--       s2 = case endsWith "\x001F" s1 of
+--              True -> dropRight 1 s1
+--              _ -> s1
+--   in s2
   
 viewLine : String -> Html Msg
 viewLine line =
@@ -164,7 +164,7 @@ viewToken token =
 viewToken' : List String -> Html Msg
 viewToken' token = case token of
 
-    tname :: txt :: _ -> Html.span [ class [ mapTokenToCss tname ] ] [ Html.text (String.map (\ch -> if (ch == ' ') then '_' else ch) txt) ]
+    tname :: txt :: _ -> Html.span [ class [ mapTokenToCss tname ] ] [ Html.text txt ] -- (String.map (\ch -> if (ch == ' ') then '_' else ch) txt)
 
     _ :: [] -> Html.span [] []
     [] -> Html.span [] []

@@ -31,6 +31,7 @@ import Data.Data
 import Data.Foldable as F
 import Data.List as L hiding (splitAt)
 import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
 
 -- Data, Typeable for GHC.Token
 deriving instance Data GHC.Token
@@ -39,6 +40,56 @@ deriving instance Typeable GHC.Token
 -- types
 type TokenSpan  = ((Int, Int), (Int, Int))
 type Token  = (TokenSpan, T.Text)
+
+
+ghcMain :: IO ()
+ghcMain =
+    -- TODO send errors/exceptions/messages to client !
+  GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
+    GHC.liftIO $ GHC.runGhc (Just libdir) $ do
+      moduleNames <- loadAllModules
+      mapM_ process (concatMap snd moduleNames)
+
+process :: String -> GHC.Ghc String
+process moduleName = do
+        modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
+
+        -- TODO use parser result
+        p <- GHC.parseModule modSum
+        let ps  = GHC.pm_parsed_source p
+        GHC.liftIO (putStrLn $ "ParsedSource\n\n" ++ SYB.showData SYB.Parser 0 ps)
+
+        -- Tokens ------------------------------------------------------
+
+        -- TODO check if fixed ? http://ghc.haskell.org/trac/ghc/ticket/8265
+        -- rts <- GHC.getRichTokenStream (GHC.ms_mod modSum)
+        -- rts <- HaRe.getRichTokenStreamWA (GHC.ms_mod modSum)
+        ts <- GHC.getTokenStream (GHC.ms_mod modSum)
+
+        -- let tokens_and_source = GHC.addSourceToTokens (GHC.mkRealSrcLoc (GHC.mkFastString "<file>") 1 1) (GHC.stringToStringBuffer "") ts
+        -- GHC.liftIO $ putStrLn $ "addSourceToTokens=" ++ concatMap showRichToken tokens_and_source
+
+        -- TODO sourceId: filename, path, module-name, ...?
+        let sourceId = moduleName
+
+        -- let tokens = concatMap (("\n" ++).(++ "\n").showRichToken) rts
+        -- let sourceAndTokens = sourceId ++ "\n" ++ GHC.showRichTokenStream rts ++ "<EOF>\n" ++ tokens
+        -- GHC.liftIO (putStrLn sourceAndTokens)
+        -- GHC.liftIO $ writeFile ("./webclient/docroot/" ++ moduleName) sourceAndTokens
+
+        -- load original .hs file
+        let file = GHC.ml_hs_file $ GHC.ms_location modSum
+        output <- GHC.liftIO $
+          case file of
+            Nothing  -> return ""
+            Just f -> do
+              content <- TIO.readFile f
+              let tokens = map locTokenToPos ts
+              return $ T.unpack . T.unlines $ mapOverLines (T.lines content) tokens
+
+        GHC.liftIO $ writeFile ("./webclient/docroot/" ++ moduleName) output
+
+        return output
 
 
 loadAllModules :: GHC.Ghc [([FilePath], [String])]
@@ -86,14 +137,14 @@ getAllTokens moduleName = do
               let tokens = map locTokenToPos ts
               return tokens
 
--- TODO 'inline' in mapOverLines
+-- MAYBE TODO 'inline' in mapOverLines
 splitMultilineTokens :: [Token] -> [Token]
 splitMultilineTokens =
   concatMap splitToken 
   where
     splitToken :: Token -> [Token]
     splitToken token@(((l1, c1), (l2, c2)), tname)
-      | l2 - l1 > 1 = [firstToken] ++ [(((l, 1), (0, 0)), tname) | l <- [l1+1..l2-1]] ++ [lastToken] 
+      | l2 - l1 > 1 = [firstToken] ++ [(((l, 1), (0, 0)), tname) | l <- [l1+1..l2-1]] ++ [lastToken]
       | l2 - l1 > 0 = [firstToken, lastToken]
       | otherwise = [token]
       where
@@ -117,15 +168,15 @@ tokenizeLine input tokens =
                       "" -> outTxt
                       _  -> outTxt <> sp <> "WS" <> separator <> inTxt
                       
-              -- all multilines, except last 
+              -- all multilines, except last
               (((l1, c1), (0, 0)), tname) : _ ->
                 outTxt <> sp <> tname <> separator <> inTxt
 
-              -- TODO use guards
-              (((l1, c1), (l2, c2)), tname) : tsTail | l1 == l2 && c1 == c2 ->
-                                                       loopRecurse c1 0 tsTail tname
-                                                     | col == c1 -> loopRecurse c2 (c2 - c1) tsTail tname
-                                                     | otherwise -> loopRecurse c1 (c1 - col) ts "WS"
+              (((l1, c1), (l2, c2)), tname) : tsTail 
+                | l1 == l2 && c1 == c2 -> loopRecurse c1 0 tsTail tname
+                | col == c1            -> loopRecurse c2 (c2 - c1) tsTail tname
+                | otherwise            -> loopRecurse c1 (c1 - col) ts "WS"
+                
                 where loopRecurse nc n nextTs t
                         = let (inTxtHead, inTxtTail) = T.splitAt n inTxt in
                             loopCol nc separator inTxtTail nextTs (outTxt <> sp <> t <> separator <> inTxtHead)
@@ -133,12 +184,13 @@ tokenizeLine input tokens =
 
 mapOverLines :: [T.Text] -> [Token] -> [T.Text]
 mapOverLines inputLines tokens =
-  fst $ F.foldr' indexHelper ([], tokens) $ zip [0..] inputLines
+  fst $ F.foldl' indexHelper ([], ts) $ zip [1..] inputLines
     where
-      indexHelper (i,line) (outputLines, ts)  =
-        -- TODO
-        ((T.pack (show i) <> " " <> line) : outputLines, ts)
-
+      ts = splitMultilineTokens tokens
+      indexHelper (outputLines, ts) (i, inputLine)  =
+        let (tsHead, tsTail) = splitLineTokens i ts
+            outputLine = tokenizeLine inputLine tsHead
+        in (outputLines <> [outputLine], tsTail)
                     
 locTokenToPos :: GHC.Located GHC.Token -> Token
 locTokenToPos locToken =
@@ -166,4 +218,4 @@ showRichToken (t, s) = "\n" ++ srcloc ++ " " ++ tok ++ " " ++ s where
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
 
-separator = "\001F" -- IS1 "Information Separator 1"
+separator = "\x001F" -- IS1 "Information Separator 1"

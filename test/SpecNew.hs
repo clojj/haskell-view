@@ -51,10 +51,11 @@ main = do
 
   -- plan:
   -- 1) lines src
-  -- 2) for each line: alternate WS ans tokens (for that line); last WS/token does NOT terminate with \001F
+  -- 2) for each line: alternate WS ans tokens (for that line); last WS/token does NOT terminate with \x001F
 
     describe "usind Data.Text, new strategy" $ do
 
+      -- TODO replace by inline multiline-splitting
       it "1) splitMultilineTokens" $
         splitMultilineTokens tokens `shouldBe` expectedTokens
 
@@ -82,11 +83,11 @@ main = do
 
       it "3) tokenizeLine" $ do
         let result = tokenizeLine "module TestMod" [(((1, 1), (1, 7)),"ITmodule"),(((1, 8), (1, 15)),"ITconid")]
-        result `shouldBe` "ITmodule\001Fmodule\001FWS\001F \001FITconid\001FTestMod"
+        result `shouldBe` "ITmodule\x001Fmodule\x001FWS\x001F \x001FITconid\x001FTestMod"
 
       it "3a) tokenizeLine only WS, no tokens" $ do
         let result = tokenizeLine " " []
-        result `shouldBe` "WS\001F "
+        result `shouldBe` "WS\x001F "
 
       it "3b) tokenizeLine empty line" $ do
         let result = tokenizeLine "" []
@@ -94,28 +95,26 @@ main = do
 
       it "3c) tokenizeLine" $ do
         let result = tokenizeLine " module  TestMod " [(((1, 2), (1, 8)),"ITmodule"),(((1, 10), (1, 17)),"ITconid")]
-        result `shouldBe` "WS\001F \001FITmodule\001Fmodule\001FWS\001F  \001FITconid\001FTestMod\001FWS\001F "
+        result `shouldBe` "WS\x001F \x001FITmodule\x001Fmodule\x001FWS\x001F  \x001FITconid\x001FTestMod\x001FWS\x001F "
 
       it "3d) tokenizeLine multiline-first" $ do
         let result = tokenizeLine "multi = \"line1\\" [(((31,1),(31,1)),"ITsemi"),(((31,1),(31,6)),"ITvarid"),(((31,7),(31,8)),"ITequal"),(((31,9),(0,0)),"ITstring")]
-        result `shouldBe` "ITsemi\001F\001FITvarid\001Fmulti\001FWS\001F \001FITequal\001F=\001FITstring\001F \"line1\\"
+        result `shouldBe` "ITsemi\x001F\x001FITvarid\x001Fmulti\x001FWS\x001F \x001FITequal\x001F=\x001FITstring\x001F \"line1\\"
 
       it "3e) tokenizeLine multiline-middle" $ do
         let result = tokenizeLine "  \\ line2 \\  " [(((1, 1), (0, 0)),"ITstring")]
-        result `shouldBe` "ITstring\001F  \\ line2 \\  "
+        result `shouldBe` "ITstring\x001F  \\ line2 \\  "
 
 
-      -- TODO inline multiline-splitting
       it "4) mapOverLines" $ do
         let result = mapOverLines
                       ["module TestMod", "  \\ line2 \\  ", " module  TestMod "]
-                      [(((1, 1), (1, 7)),"ITmodule"),(((1, 8), (1, 15)),"ITconid"),
-                       (((2, 1), (0, 0)),"ITstring"), (((3, 2), (3, 8)),"ITmodule"),
-                       (((3, 10), (3, 17)),"ITconid")
+                      [(((1, 1), (1, 7)),"ITmodule"), (((1, 8), (1, 15)),"ITconid"),
+                       (((2, 1), (0, 0)),"ITstring"),
+                       (((3, 2), (3, 8)),"ITmodule"), (((3, 10), (3, 17)),"ITconid")
                       ]
-        result `shouldBe` ["ITmodule\001Fmodule\001FWS\001F \001FITconid\001FTestMod",
-                           "ITstring\001F  \\ line2 \\  ",
-                           "WS\001F \001FITmodule\001Fmodule\001FWS\001F  \001FITconid\001FTestMod\001FWS\001F "
+        result `shouldBe` ["ITmodule\x001Fmodule\x001FWS\x001F \x001FITconid\x001FTestMod",
+                           "ITstring\x001F  \\ line2 \\  ",
+                           "WS\x001F \x001FITmodule\x001Fmodule\x001FWS\x001F  \x001FITconid\x001FTestMod\x001FWS\x001F "
                           ]
-
 

@@ -1,6 +1,7 @@
 module Main exposing (..)
 
-import Html exposing (Html)
+import Html exposing (Html, Attribute)
+import Html.Attributes
 import Html.App as Html
 import Http
 import Task exposing (..)
@@ -164,10 +165,14 @@ viewToken token =
 viewToken' : List String -> Html Msg
 viewToken' token = case token of
 
-    tname :: txt :: _ -> Html.span [ class [ mapTokenToCss tname ] ] [ Html.text txt ] -- (String.map (\ch -> if (ch == ' ') then '_' else ch) txt)
+    tname :: txt :: _ -> Html.span [ lineStyle, class [ mapTokenToCss tname ] ]
+      [ Html.text txt ] -- (String.map (\ch -> if (ch == ' ') then '_' else ch) txt)
 
-    _ :: [] -> Html.span [] []
-    [] -> Html.span [] []
+    _ :: [] -> Html.span [lineStyle] [Html.text " "]
+    [] -> Html.span [lineStyle] [Html.text " "]
+
+lineStyle : Attribute a
+lineStyle = Html.Attributes.style [("display", "inline-block"), ("white-space", "pre")]
 
 -- TODO delete this mapping and generate + use tokens.css and the String
 -- see TokenGenerator.hs

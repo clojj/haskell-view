@@ -114,7 +114,13 @@ ghcMainTestSpecNew :: IO [Token]
 ghcMainTestSpecNew =
     GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
-                  loadAllModules
+                  
+                  -- TODO eventually move this to ghcMain
+                  moduleNames <- loadAllModules
+                  GHC.liftIO $ do
+                    print moduleNames
+                    writeFile "./webclient/docroot/.modules" $ intercalate "," (concatMap snd moduleNames)
+                  
                   getAllTokens "TestMod"
       -- GHC.liftIO $ print tokens
       -- return tokens

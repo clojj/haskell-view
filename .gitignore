@@ -15,3 +15,5 @@ webclient/hv.css
 
 # GHC pre-processed documents
 docroot/
+
+webclient/npm-debug.log

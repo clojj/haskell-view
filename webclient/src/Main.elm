@@ -26,9 +26,7 @@ type alias Model =
 
 
 init : ( Model, Cmd Msg )
-init =
-    -- ( { modules = [], html = Html.text "" }, getHaskell "TestMod" LoadSourceSucceed )
-    ( { modules = [], html = Html.text "" }, getModules LoadModulesSucceed )
+init = ( { modules = [], html = Html.text "" }, getModules LoadModulesSucceed )
 
 
 

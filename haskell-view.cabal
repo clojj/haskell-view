@@ -36,7 +36,7 @@ library
 test-suite haskell-view-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             SpecNew.hs
+  main-is:             SpecLibText.hs
   build-depends:       base
                      , haskell-view
                      , hspec

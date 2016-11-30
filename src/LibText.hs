@@ -130,8 +130,8 @@ getAllTokens moduleName = do
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
 
         ts <- GHC.getTokenStream (GHC.ms_mod modSum)
-        let tokens_and_source = GHC.addSourceToTokens (GHC.mkRealSrcLoc (GHC.mkFastString "<file>") 1 1) (GHC.stringToStringBuffer "") ts
-        GHC.liftIO $ putStrLn $ concatMap showRichToken tokens_and_source
+        -- let tokens_and_source = GHC.addSourceToTokens (GHC.mkRealSrcLoc (GHC.mkFastString "<file>") 1 1) (GHC.stringToStringBuffer "") ts
+        -- GHC.liftIO $ putStrLn $ concatMap showRichToken tokens_and_source
 
         -- load original .hs file
         let file = GHC.ml_hs_file $ GHC.ms_location modSum
@@ -175,7 +175,7 @@ tokenizeLine input tokens =
                       _  -> outTxt <> sp <> "WS" <> separator <> inTxt
                       
               -- all multilines, except last
-              (((l1, c1), (0, 0)), tname) : _ ->
+              ((_, (0, 0)), tname) : _ ->
                 outTxt <> sp <> tname <> separator <> inTxt
 
               (((l1, c1), (l2, c2)), tname) : tsTail 
@@ -186,15 +186,15 @@ tokenizeLine input tokens =
                 where loopRecurse nc n nextTs t
                         = let (inTxtHead, inTxtTail) = T.splitAt n inTxt in
                             loopCol nc separator inTxtTail nextTs (outTxt <> sp <> t <> separator <> inTxtHead)
-                  
+
 
 mapOverLines :: [T.Text] -> [Token] -> [T.Text]
 mapOverLines inputLines tokens =
   fst $ F.foldl' indexHelper ([], ts) $ zip [1..] inputLines
     where
       ts = splitMultilineTokens tokens
-      indexHelper (outputLines, ts) (i, inputLine)  =
-        let (tsHead, tsTail) = splitLineTokens i ts
+      indexHelper (outputLines, nextTokens) (i, inputLine)  =
+        let (tsHead, tsTail) = splitLineTokens i nextTokens
             outputLine = tokenizeLine inputLine tsHead
         in (outputLines <> [outputLine], tsTail)
                     
@@ -224,4 +224,5 @@ showRichToken (t, s) = "\n" ++ srcloc ++ " " ++ tok ++ " " ++ s where
 
 tokenLocs = map (\(GHC.L l _, s) -> (l,s))
 
+separator :: T.Text
 separator = "\x001F" -- IS1 "Information Separator 1"

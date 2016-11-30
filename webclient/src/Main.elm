@@ -1,13 +1,17 @@
 module Main exposing (..)
 
-import Html exposing (Html, Attribute)
+import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html.Events as Events
 import Http
 import Debug
 import String exposing (..)
 import List.Split exposing (..)
+import List exposing (..)
 
+import Chae.Id as Id exposing (Id)
+import Chae.Node as Node exposing (Node)
+import Chae.Tree as Tree exposing (Tree)
 
 main : Program Never Model Msg
 main =
@@ -22,19 +26,37 @@ main =
 
 type alias Model =
     { modules : List String,
-      html    : Html Msg }
+      html    : Html Msg,
+      items : Tree Item, opened : List Id
+    }
 
 
 init : ( Model, Cmd Msg )
-init = ( { modules = [], html = Html.text "" }, getModules LoadModulesSucceed )
+init = ( { modules = [], html = Html.text ""
+         , items = Tree.fromList (.id) (.parentIds) items
+         , opened = List.map .id items }
+         , getModules LoadModulesSucceed )
+
+-- chae-tree
+type alias Item =
+    { id : String, name : String, parentIds : List String }
 
 
+items : List Item
+items =
+    [ { id = "a", name = "root", parentIds = [] }
+    , { id = "b", name = "next root", parentIds = [] }
+    , { id = "c", name = "nested", parentIds = [ "b" ] }
+    , { id = "d", name = "deep nested", parentIds = [ "c" ] }
+    ]
 
 -- UPDATE
 
 
 type Msg
-    = LoadNewSource String
+    = NoOp
+    | Toggle Id
+    | LoadNewSource String
     | LoadSourceSucceed (Result Http.Error String)
     | LoadModulesSucceed (Result Http.Error String)
 
@@ -42,6 +64,20 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        -- chae-tree
+        NoOp ->
+            model ! []
+
+        Toggle id ->
+            case partition (\o -> o == id) model.opened of
+                ( [], rest ) ->
+                    let model_ = { model | opened = id :: rest }
+                    in { model_ | html = viewTree model_ } ! []
+
+                ( _, rest ) ->
+                    let model_ = { model | opened = rest }
+                    in { model_ | html = viewTree model_ } ! []
+
         LoadNewSource name ->
             ( model, getHaskell name LoadSourceSucceed )
 
@@ -56,7 +92,7 @@ update msg model =
                                      Just m -> m
                                      _      -> ""
                          in ( {model | modules = srcModules,
-                                       html = viewModules srcModules },
+                                       html = viewModules srcModules model },
                               Cmd.none )
               Result.Err err ->
                   let _ = Debug.log "Error " err
@@ -68,7 +104,7 @@ update msg model =
                 case data of
                     "" -> ( {model | html = Html.text "error"}, Cmd.none )
             
-                    src -> let srcHtml = createView src
+                    src -> let srcHtml = createSourceView src
                            in ( {model | html = srcHtml}, Cmd.none )
               Result.Err err ->
                   let _ = Debug.log "Error " err
@@ -100,19 +136,69 @@ view { html } = html
 
 -- create Html from update
 
--- TODO use http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest
-viewModules : List String -> Html Msg
-viewModules modules =
+-- chae-tree
+isOpened : List Id -> Node a -> Bool
+isOpened list node =
+    member (Node.id node) list
+
+
+itemView : Model -> Node Item -> Html Msg
+itemView model node =
+    let
+        item =
+            Node.root node
+
+        open =
+            isOpened (.opened model) node
+
+        symbol =
+            if List.length (Node.children node) > 0 then
+                if open then
+                    "[-] "
+                else
+                    "[+] "
+            else
+                "[ ] "
+    in
+        li []
+            [ a [ Events.onClick (Toggle (Node.id node)) ]
+                [ text (symbol ++ item.name) ]
+            , if open then
+                listView model (Node.children node)
+              else
+                text ""
+            ]
+
+
+listView : Model -> Tree Item -> Html Msg
+listView model items =
+    ul []
+        (List.map (\n -> itemView model n) items)
+
+
+viewTree : Model -> Html Msg
+viewTree model =
+    listView model (.items model)
+
+
+-- TODO maybe also use http://package.elm-lang.org/packages/evancz/elm-sortable-table/latest
+viewModules : List String -> Model -> Html Msg
+viewModules modules model =
   case modules of
     [] -> Html.text "no modules!"
-    _ -> Html.div [class "haskell-viewITmodule"] (List.map createModuleLink modules)
+    _ ->  Html.div [] [
+            Html.div [] [viewTree model],
+            Html.div [class "haskell-viewITmodule"] (List.map createModuleLink modules)
+          ]
+
 
 createModuleLink : String -> Html Msg    
 createModuleLink mod =    
-  Html.div [onClick (LoadNewSource mod)] [Html.text mod]
-  
-createView : String -> Html Msg
-createView src =
+  Html.div [Events.onClick (LoadNewSource mod)] [Html.text mod]
+
+
+createSourceView : String -> Html Msg
+createSourceView src =
     Html.div []
         -- TODO parse src
         -- <tr>

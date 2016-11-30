@@ -108,13 +108,15 @@ main = do
 
       it "4) mapOverLines" $ do
         let result = mapOverLines
-                      ["module TestMod", "  \\ line2 \\  ", " module  TestMod "]
+                      ["module TestMod", "line1 \\", "  \\ line2 \\  ", "line3", " module  TestMod "]
                       [(((1, 1), (1, 7)),"ITmodule"), (((1, 8), (1, 15)),"ITconid"),
-                       (((2, 1), (0, 0)),"ITstring"),
-                       (((3, 2), (3, 8)),"ITmodule"), (((3, 10), (3, 17)),"ITconid")
+                       (((2, 1), (4, 6)),"ITstring"),
+                       (((5, 2), (5, 8)),"ITmodule"), (((5, 10), (5, 17)),"ITconid")
                       ]
         result `shouldBe` ["ITmodule\x001Fmodule\x001FWS\x001F \x001FITconid\x001FTestMod",
+                           "ITstring\x001Fline1 \\",
                            "ITstring\x001F  \\ line2 \\  ",
+                           "ITstring\x001Fline3",
                            "WS\x001F \x001FITmodule\x001Fmodule\x001FWS\x001F  \x001FITconid\x001FTestMod\x001FWS\x001F "
                           ]
 

@@ -52,6 +52,8 @@ ghcMain =
 
 process :: String -> GHC.Ghc String
 process moduleName = do
+        -- TODO GHC.topSortModuleGraph GHC.getModuleGraph
+
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
 
         -- TODO use parser result
@@ -103,8 +105,9 @@ loadAllModules = do
 
   moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["../stack-project/"]
   useDirs (concatMap fst moduleNames)
-  GHC.setTargets $ map (\mod -> GHC.Target (GHC.TargetModule (GHC.mkModuleName mod)) True Nothing) (concatMap snd moduleNames)
+  GHC.setTargets $ map (\targetModule -> GHC.Target (GHC.TargetModule (GHC.mkModuleName targetModule)) True Nothing) (concatMap snd moduleNames)
   GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
+  -- TODO GHC.depanal
   GHC.load GHC.LoadAllTargets
   return moduleNames
 
@@ -121,12 +124,14 @@ ghcMainTestSpecNew =
                     print moduleNames
                     writeFile "./webclient/docroot/.modules" $ intercalate "," (concatMap snd moduleNames)
                   
-                  getAllTokens "TestMod"
+                  getAllTokensForTest "TestMod"
       -- GHC.liftIO $ print tokens
       -- return tokens
       
-getAllTokens :: String -> GHC.Ghc [Token]
-getAllTokens moduleName = do
+getAllTokensForTest :: String -> GHC.Ghc [Token]
+getAllTokensForTest moduleName = do
+        -- TODO GHC.topSortModuleGraph GHC.getModuleGraph
+  
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
 
         ts <- GHC.getTokenStream (GHC.ms_mod modSum)
@@ -139,11 +144,11 @@ getAllTokens moduleName = do
           case file of
             Nothing  -> return []
             Just f -> do
-              content <- readFile f
+              -- TODO use in tests ?
+              -- content <- readFile f
               let tokens = map locTokenToPos ts
               return tokens
 
--- MAYBE TODO 'inline' in mapOverLines
 splitMultilineTokens :: [Token] -> [Token]
 splitMultilineTokens =
   concatMap splitToken 

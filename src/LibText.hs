@@ -32,6 +32,7 @@ import Data.Foldable as F
 import Data.List as L hiding (splitAt)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Data.Graph (flattenSCCs)
 
 -- Data, Typeable for GHC.Token
 deriving instance Data GHC.Token
@@ -47,19 +48,33 @@ ghcMain =
     -- TODO send errors/exceptions/messages to client !
   GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
     GHC.liftIO $ GHC.runGhc (Just libdir) $ do
+
       moduleNames <- loadAllModules
+      GHC.liftIO $ writeFile "./webclient/docroot/.modules" $ intercalate "," (concatMap snd moduleNames)
+
       mapM_ process (concatMap snd moduleNames)
 
 process :: String -> GHC.Ghc String
 process moduleName = do
-        -- TODO GHC.topSortModuleGraph GHC.getModuleGraph
 
         modSum <- GHC.getModSummary (GHC.mkModuleName moduleName)
 
+        -- TODO GHC.topSortModuleGraph GHC.getModuleGraph
+        -- TODO only once.. it's the same each time !
+        mg <- GHC.getModuleGraph
+--         GHC.liftIO $ print $ GHC.showSDocUnsafe $ GHC.ppr mg
+        
+        let sccs = GHC.topSortModuleGraph False [modSum] Nothing
+            flatSccs = flattenSCCs sccs
+--         GHC.liftIO $ print $ GHC.showSDocUnsafe $ GHC.ppr sccs
+        GHC.liftIO $ print $ GHC.showSDocUnsafe $ GHC.ppr flatSccs
+        -- END TODO
+        
+        
         -- TODO use parser result
         p <- GHC.parseModule modSum
         let ps  = GHC.pm_parsed_source p
-        GHC.liftIO (putStrLn $ "ParsedSource\n\n" ++ SYB.showData SYB.Parser 0 ps)
+        -- GHC.liftIO (putStrLn $ "ParsedSource\n\n" ++ SYB.showData SYB.Parser 0 ps)
 
         -- Tokens ------------------------------------------------------
 
@@ -104,6 +119,7 @@ loadAllModules = do
   GHC.setSessionDynFlags dflags'
 
   moduleNames <- GHC.liftIO $ concat <$> mapM getModules ["../stack-project/"]
+  GHC.liftIO $ putStrLn $ "moduleNames: " ++ show moduleNames
   useDirs (concatMap fst moduleNames)
   GHC.setTargets $ map (\targetModule -> GHC.Target (GHC.TargetModule (GHC.mkModuleName targetModule)) True Nothing) (concatMap snd moduleNames)
   GHC.liftIO $ putStrLn "Compiling modules. This may take some time. Please wait."
@@ -111,14 +127,12 @@ loadAllModules = do
   GHC.load GHC.LoadAllTargets
   return moduleNames
 
--- Data.Text, new strategy
-
+-- START for unittest
 ghcMainTestSpecNew :: IO [Token]
 ghcMainTestSpecNew =
     GHC.defaultErrorHandler GHC.defaultFatalMessager GHC.defaultFlushOut $
       GHC.liftIO $ GHC.runGhc (Just libdir) $ do
                   
-                  -- TODO eventually move this to ghcMain
                   moduleNames <- loadAllModules
                   GHC.liftIO $ do
                     print moduleNames
@@ -148,6 +162,8 @@ getAllTokensForTest moduleName = do
               -- content <- readFile f
               let tokens = map locTokenToPos ts
               return tokens
+              
+-- END for unittest
 
 splitMultilineTokens :: [Token] -> [Token]
 splitMultilineTokens =

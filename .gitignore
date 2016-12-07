@@ -1,5 +1,10 @@
 .stack-work/
 responses/
+ideaHaskellLib
+.imdone
+.imdoneignore
+.idea
+*.iml
 
 # elm-package generated files
 webclient/elm-stuff/
